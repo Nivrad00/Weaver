@@ -1,0 +1,23 @@
+{
+  "name": "weaver",
+  "version": "1.0.0",
+  "description": "A writing app!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nivrad00/Weaver.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Nivrad00/Weaver/issues"
+  },
+  "homepage": "https://github.com/Nivrad00/Weaver#readme",
+  "dependencies": {
+    "browser-sync": "^2.26.12",
+    "bulma": "^0.9.1"
+  }
+}
