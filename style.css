@@ -1,0 +1,17 @@
+* {
+	border: 1px solid gray;
+}
+html {
+	height: 100%;
+}
+body {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+#main {
+	flex: 1;
+}
+#main div {
+	height: 100%;
+}
