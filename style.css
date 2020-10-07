@@ -1,5 +1,5 @@
 * {
-	border: 1px solid gray;
+	/* border: 1px solid gray; */
 }
 html {
 	height: 100%;
@@ -9,9 +9,22 @@ body {
 	display: flex;
 	flex-direction: column;
 }
+
 #main {
-	flex: 1;
+	height: 0px; /* start with a 0 height... */
+	flex: 1; /* then allow it to grow vertically until it fills the parent, <body>*/
 }
-#main div {
+
+#bookshelf {
+	overflow:auto;
+}
+
+.full-height {
 	height: 100%;
+}
+
+.cover {
+	max-width: 50px;
+	max-height: 80px;
+	object-fit: contain;
 }
