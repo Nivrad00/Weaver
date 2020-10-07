@@ -1,0 +1,43 @@
+.editor {
+    border: solid 1px #ccc;
+    padding: 20px;
+    min-height: 83%;
+    background-color: white;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+.buttonbar {
+    background:#e4e4e4;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    margin: 0 0 0 0;
+    width: 100%;
+}
+
+.buttonbar button {
+    margin: auto;
+}
+
+.toolbar {
+    border-top: solid 1px #ccc;
+    border-left: solid 1px #ccc;
+    border-right: solid 1px #ccc;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    background: #f4f4f4;
+    padding: 5px;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    margin-top: 10px;
+}
+
+.toolbar > span {
+    cursor:pointer;
+}
+
+.toolbar > span:hover {
+    text-decoration:underline;
+}
