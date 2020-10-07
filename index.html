@@ -8,9 +8,11 @@
         <link rel="stylesheet" href="stylesheets/style.css" />
         <link rel="stylesheet" href="stylesheets/texteditor.css" />
 
-        <script src="jquery-3.5.1.min.js"></script>
+        <script src="scripts/jquery-3.5.1.min.js"></script>
 		<script src="https://kit.fontawesome.com/e690d06293.js" crossorigin="anonymous"></script>
-		<script src="main.js"></script>
+        <script src="scripts/main.js"></script>
+        <script src="scripts/toolbar.js"></script>
+        
 
         <title>Weaver</title>
     </head>
@@ -88,10 +90,10 @@
                             </div>
                         </nav>
                         <div class="toolbar">
-                            <span class="fa fa-bold fa-fw" aria-hidden="true"></span>
-                            <span class="fa fa-italic fa-fw" aria-hidden="true"></span>
-                            <span class="fa fa-list fa-fw" aria-hidden="true"></span>
-                            <span class="fa fa-link fa-fw" aria-hidden="true"></span>
+                            <a href="javascript:void(0)" onclick="format('bold')"><span class="fa fa-bold fa-fw"></span></a>
+                            <a href="javascript:void(0)" onclick="format('italic')"><span class="fa fa-italic fa-fw"></span></a>
+                            <a href="javascript:void(0)" onclick="format('insertunorderedlist')"><span class="fa fa-list fa-fw"></span></a>
+                            <a href="javascript:void(0)" onclick="setUrl()"><span class="fa fa-link fa-fw"></span></a>
                         </div>
                         <div class="editor" contenteditable="true">
                         </div>

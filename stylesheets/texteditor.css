@@ -34,10 +34,14 @@
     margin-top: 10px;
 }
 
-.toolbar > span {
+.toolbar .span {
     cursor:pointer;
 }
 
-.toolbar > span:hover {
-    text-decoration:underline;
+.toolbar a {
+    color: black;
+}
+
+.toolbar a:hover {
+    color: #05d1b2;
 }
