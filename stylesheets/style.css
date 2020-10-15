@@ -28,3 +28,7 @@ body {
 	max-height: 80px;
 	object-fit: contain;
 }
+
+.navbar-item img {
+	max-height: 3.5rem;
+}
