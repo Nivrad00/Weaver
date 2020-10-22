@@ -10,13 +10,25 @@
 
         <script src="scripts/jquery-3.5.1.min.js"></script>
 		<script src="https://kit.fontawesome.com/e690d06293.js" crossorigin="anonymous"></script>
-        <script src="scripts/main.js"></script>
+        <script src="scripts/sidebar.js"></script>
         <script src="scripts/toolbar.js"></script>
         
 
         <title>Weaver</title>
     </head>
     <body>
+        <div id="delete-confirm">
+            <div>
+                <h2 class="title has-text-white is-5">
+                    Are you sure you want to delete <span id="delete-name"></span>?
+                </h2>
+                <p class="buttons is-centered">
+                    <button class="button is-primary" id="delete-no"><span>No, go back</span></button>    
+                    <button class="button is-danger" id="delete-yes"><span>Yes, delete it</span></button>
+                </p>
+            </div>
+        </div>
+
 		<nav class="navbar has-shadow" role="navigation">
             <div class="container">
                 <div class="navbar-brand">
@@ -42,30 +54,7 @@
 		<section id="main" class="mt-5">
 			<div class="container full-height">
 				<div class="columns full-height">
-					<div class="column is-one-quarter has-background-light p-4" id="bookshelf">
-						
-						<a class="box mb-4">
-							<div class="media">
-								<div class="media-left">
-									<figure class="image">
-										<img src="images/kbxing.png" class="cover" alt="Killbot Crossing">
-									</figure>
-								</div>
-								<div class="media-content">
-									<p class="title is-4">Killbot Crossing</p>
-									<p class="subtitle is-6">A post-apocalyptic road trip novel. With robots!</p>
-								</div>
-							</div>
-						</a>
-
-						<a class="box mb-4">
-							<div class="media">
-								<div class="media-content">
-									<p class="title is-4">Tales from Post-War Pyrrhia</p>
-									<p class="subtitle is-6">A collection of short ficlets from Jade Mountain and beyond.</p>
-								</div>
-							</div>
-						</a>
+					<div class="column is-one-third has-background-light p-4" id="story-list">
 
 						<button id="add-story" class="button is-primary is-rounded">
 							<span class="icon has-text-white">
@@ -75,7 +64,7 @@
 						</button>
 					</div>
 
-					<div class="column is-two-thirds has-background-light p-4" style="margin-left: 5%; padding: 0 !important">
+					<div class="column has-background-light p-4" style="margin-left: 2%; padding: 0 !important">
                         <nav class="buttonbar navbar">
                             <div class="navbar-start">
                                 <div class="navbar-item">

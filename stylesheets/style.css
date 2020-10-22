@@ -15,7 +15,7 @@ body {
 	flex: 1; /* then allow it to grow vertically until it fills the parent, <body>*/
 }
 
-#bookshelf {
+#story-list {
 	overflow:auto;
 }
 
@@ -31,4 +31,41 @@ body {
 
 .navbar-item img {
 	max-height: 3.5rem;
+}
+
+.story {
+	position: relative;
+}
+
+.story-options {
+	position: absolute;
+	z-index: 100;
+	right: 8px;
+	bottom: 5px;
+	display: none;
+	padding-left: 5px;
+	padding-top: 5px;
+}
+
+.story-details {
+	padding: 25px 20px;
+}
+
+#delete-confirm {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	z-index: 100;
+	text-align: center;
+	background: rgb(0, 0, 0); /* Fallback for older browsers without RGBA-support */
+	background: rgba(0, 0, 0, 0.6);
+	display: flex;
+	visibility: hidden;
+	flex-direction: column;
+}
+
+#delete-confirm div {
+	margin: auto;
 }
