@@ -13,29 +13,17 @@ $(function() {
 
     const auth = firebase.auth();
 
-
-    // auth state change listener
+    //status change
     auth.onAuthStateChanged(user => {
-        console.log('auth state changed')
-        if (user !== null) {
-            console.log('user logged in')
-            let displayName = user.displayName;
-            let email = user.email;
-            let emailVerified = user.emailVerified;
-            let photoURL = user.photoURL;
-            let isAnonymous = user.isAnonymous;
-            let uid = user.uid;
-            let providerData = user.providerData;
-
-        } else {
-            console.log('user not logged in')
-
-            // if user not logged in, do not allow access to index.html
-            let defaultPage = window.location.pathname
-            if (defaultPage.includes("index.html") || defaultPage === "/") {
-                window.location.href="user_access.html";
+        if (!user) {
+            console.log('No user logged in');
+            let defaultPage = window.location.pathname;
+            console.log(defaultPage);
+            if (!defaultPage.includes('index')) {
+                window.location.href='index.html';
             }
-            
+        }else {
+            console.log('User logged in');
         }
     })
 
@@ -51,7 +39,7 @@ $(function() {
         
         auth.createUserWithEmailAndPassword(email, password).then(cred => {
             console.log(cred.user);
-            window.location.href='index.html';
+            window.location.href='home.html';
         }).catch(error => {
             console.log('Signup error: ' + error);
             $("#loginmsg").html(`<span style="color:red">${error.message}</span>`)
@@ -71,7 +59,7 @@ $(function() {
         
         auth.signInWithEmailAndPassword(email, password).then(cred => {
             console.log(cred.user);
-            window.location.href='index.html';
+            window.location.href='home.html';
         }).catch(error => {
             console.log('Login error: ' + error);
             $("#loginmsg").html(`<span style="color:red">${error.message}</span>`)
@@ -88,7 +76,7 @@ $(function() {
 
         auth.signOut().then(cred => {
             console.log('Signed Out');
-            window.location.href='user_access.html';
+            window.location.href='index.html';
         }).catch(error => {
             console.log('Logout Error: ' + error);
         })
