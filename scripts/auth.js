@@ -22,8 +22,12 @@ $(function() {
             if (!defaultPage.includes('index')) {
                 window.location.href='index.html';
             }
+            //clear user info field
+            $('#user').text('');
         }else {
             console.log('User logged in');
+            //set user info in home page after log in
+            $('#user').text(user.email);
         }
     })
 
