@@ -57,18 +57,38 @@
 		<section id="main" class="mt-5">
 			<div class="container full-height">
 				<div class="columns full-height">
-					<div class="column is-one-third has-background-light p-4" id="story-list">
-
-						<button id="add-story" class="button is-primary is-rounded">
-							<span class="icon has-text-white">
-								<i class="fas fa-plus"></i>
-							</span>
-							<span>NEW</span>
-						</button>
+					<div class="column" id="sidebar">
+                        <div class="tabs is-boxed" id="sidebar-tabs">
+                            <ul>
+                                <li class="is-active">
+                                    <a id="active-tab" data-name="stories">
+                                        <span class="icon is-small m-0 mr-2"><i class="fas fa-book" aria-hidden="true"></i></span>
+                                        Stories
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-name="sprints">
+                                        <span class="icon is-small m-0 mr-2"><i class="fas fa-running" aria-hidden="true"></i></span>
+                                        Sprints
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-name="prompts">
+                                        <span class="icon is-small m-0 mr-2"><i class="fas fa-lightbulb" aria-hidden="true"></i></span>
+                                        Prompts
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="has-background-light" id="sidebar-content">
+                        </div>
+                        <div class="has-background-grey-lighter" id="footer">
+                            <span id="quick-wordcount"></span>
+                        </div>
 					</div>
 
 					<div class="column has-background-light p-4" style="margin-left: 2%; padding: 0 !important">
-                        <nav class="buttonbar navbar">
+                        <nav class="buttonbar navbar has-background-grey-lighter">
                             <div class="navbar-start">
                                 <div class="navbar-item">
                                     <button id="save-story" class="button is-primary">
@@ -103,7 +123,7 @@
                             <a href="javascript:void(0)" onclick="format('insertunorderedlist')"><span class="fa fa-list fa-fw"></span></a>
                             <a href="javascript:void(0)" onclick="setUrl()"><span class="fa fa-link fa-fw"></span></a>
                         </div>
-                        <div class="editor" contenteditable="true">
+                        <div class="editor" contenteditable="true" id="editor">
                         </div>
 					</div>
 				</div>

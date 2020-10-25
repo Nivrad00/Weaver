@@ -149,10 +149,31 @@ function addNewStory() {
     $("#add-story").before(formatStoryButton(story));
 }
 
-function addAllStories() {
-    for (let story of stories) {
-        $("#add-story").before(formatStoryButton(story));
+function setTab(tab) {
+    $("#sidebar-content").empty();
+    if (tab == "stories") {
+        $("#sidebar-content").append(`
+            <div id="story-list">
+                <button id="add-story" class="button is-primary is-rounded">
+                    <span class="icon has-text-white">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                    <span>NEW</span>
+                </button>
+            </div>
+        `);
+        for (let story of stories) {
+            $("#add-story").before(formatStoryButton(story));
+        }
     }
+}
+
+function setTabPrompts() {
+    $("#sidebar-content").empty();
+}
+
+function setTabSprints() {
+    $("#sidebar-content").empty();
 }
 
 function deleteStory(deleteButton) {
@@ -202,7 +223,7 @@ function editStory(editButton) {
             var reader = new FileReader();
             reader.onload = function (e) {
                 story.image = e.target.result;
-                story.imageName = $('#cover-name');
+                story.imageName = $('#cover-name').text();
             }
             reader.readAsDataURL(this.files[0]);
         }
@@ -215,29 +236,35 @@ function editStory(editButton) {
         story.image = null;
         story.imageName = null;
     });
-    
+}
+
+function updateWordcount() {
+    let words = $("#editor").text().match(/\S+/g);
+    let wordcount = words ? words.length : 0;
+    $("#quick-wordcount").text(wordcount + (wordcount == 1 ? " word" : " words"));
 }
 
 $(document).ready(() => {
-    addAllStories();
+    setTab("stories");
+    updateWordcount();
 
-    $("#add-story").click(() => {
+    $("#sidebar-content").on("click", "#story-list #add-story", () => {
         addNewStory()
     });
 
-    $("#story-list").on("mouseover", ".story", function() { 
+    $("#sidebar-content").on("mouseover", "#story-list .story", function() { 
         $(this).children(".story-options").css("display", "inline"); 
     });
 
-    $("#story-list").on("mouseleave", ".story", function() { 
+    $("#sidebar-content").on("mouseleave", "#story-list .story", function() { 
         $(this).children(".story-options").css("display", "none"); 
     });
     
-    $("#story-list").on("click", ".story .story-options .story-edit", function() { 
+    $("#sidebar-content").on("click", "#story-list .story .story-options .story-edit", function() { 
         editStory(this);
     });
     
-    $("#story-list").on("click", ".story .story-options .story-delete", function() { 
+    $("#sidebar-content").on("click", "#story-list .story .story-options .story-delete", function() { 
         deleteStory(this);
     });
     
@@ -245,4 +272,19 @@ $(document).ready(() => {
         $("#delete-confirm").css("visibility", "hidden");
         $("#delete-yes").unbind("click");
     });
+    
+    $("#editor").on("input", function() {
+        updateWordcount();
+    });
+    
+    $("#sidebar-tabs a").on("click", function() {
+        $("#active-tab").parent().removeClass("is-active");
+        $("#active-tab").attr("id", "");
+
+        $(this).parent().addClass("is-active");
+        $(this).attr("id", "active-tab");
+
+        setTab($(this).data("name"));
+    });
+
 });
