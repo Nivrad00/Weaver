@@ -2,13 +2,15 @@
 var stories = [
     {
         id: 0,
-        image: "kbxing.png",
+        image: "images/kbxing.png",
+        imageName: "kbxing.png",
         title: "Killbot Crossing",
         description: "A post-apocalyptic road trip novel. With robots!"
     },
     {
         id: 1,
         image: null,
+        imageName: null,
         title: "Tales from Post-War Pyrrhia",
         description: "A collection of short ficlets from Jade Mountain and beyond"
     }
@@ -69,7 +71,7 @@ function formatStoryButton(data) {
                     <div class="media">
                         <div class="media-left">
                             <figure class="image">
-                                <img src="images/${data.image}" class="cover" alt="${data.title || "Untitled"}">
+                                <img src="${data.image}" class="cover" alt="${data.title || "Untitled"}">
                             </figure>
                         </div>
                         <div class="media-content">
@@ -89,9 +91,16 @@ function formatEditForm(data) {
             <div class="box mb-4  story-details">
                 <div class="field">
                     <label class="label">Cover</label>
-                    <div class="file">
+                    <div class="file has-name is-fullwidth">
+                        <div id="edit-cover-overlay">
+                            <a id="remove-cover">
+                                <span class="icon">
+                                    <i class="fas fa-times"></i>
+                                </span>
+                            </a>        
+                        </div>  
                         <label class="file-label">
-                            <input class="file-input" type="file" name="resume" id="edit-cover">
+                            <input class="file-input" type="file" accept="image/*" id="edit-cover">
                             <span class="file-cta">
                                 <span class="file-icon">
                                     <i class="fas fa-upload"></i>
@@ -100,18 +109,21 @@ function formatEditForm(data) {
                                     Choose a file…
                                 </span>
                             </span>
+                            <span class="file-name" id="cover-name">
+                                ${data.imageName || "None"}
+                            </span>
                         </label>
                     </div>
                 </div>
 
                 <div class="field">
                     <label class="label">Title</label>
-                    <input class="input" id="edit-title" type="text" value="${data.title}">
+                    <input class="input" maxlength="60" id="edit-title" type="text" value="${data.title}">
                 </div>
                     
                 <div class="field">
                     <label class="label">Description</label>
-                    <textarea class="textarea" id="edit-description">${data.description}</textarea>
+                    <textarea class="textarea" maxlength="200" id="edit-description">${data.description}</textarea>
                 </div>
 
                 <div class="field is-grouped">
@@ -128,7 +140,6 @@ function formatEditForm(data) {
 }
 
 function addNewStory() {
-    $("#edit-cancel").click();
     let story = {
         ...storyTemplate
     };
@@ -175,8 +186,36 @@ function editStory(editButton) {
     $("#edit-submit").click(() => {
         story.title = $("#edit-title").val();
         story.description = $("#edit-description").val();
+
+        console.log($("#edit-cover").files);
+        if ($("#edit-cover").files && $("#edit-cover").files[0]) {
+        }
+        
         $("#edit-form").replaceWith(formatStoryButton(story));
     });
+
+    $("#edit-cover").on('change', function() {
+        console.log(this);
+        if (this.files && this.files[0]) {
+            $('#cover-name').text(this.files[0].name);
+            $(this).css('display', 'absolute');
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                story.image = e.target.result;
+                story.imageName = $('#cover-name');
+            }
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+
+    $("#remove-cover").click(function() {
+        $('#edit-cover').val('');
+        $('#cover-name').text("None");
+        $(this).css('display', 'none');
+        story.image = null;
+        story.imageName = null;
+    });
+    
 }
 
 $(document).ready(() => {
