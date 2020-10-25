@@ -75,7 +75,7 @@ function formatStoryButton(data) {
                             </figure>
                         </div>
                         <div class="media-content">
-                            <p class="title is-4">${data.title}</p>
+                            <p class="title is-4">${data.title || "Untitled"}</p>
                             <p class="subtitle is-6">${data.description}</p>
                         </div>
                     </div>
