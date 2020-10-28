@@ -5,24 +5,31 @@ var stories = [
         image: "images/kbxing.png",
         imageName: "kbxing.png",
         title: "Killbot Crossing",
-        description: "A post-apocalyptic road trip novel. With robots!"
+        description: "A post-apocalyptic road trip novel. With robots!",
+        text: "robots ooo"
     },
     {
         id: 1,
         image: null,
         imageName: null,
         title: "Tales from Post-War Pyrrhia",
-        description: "A collection of short ficlets from Jade Mountain and beyond"
+        description: "A collection of short ficlets from Jade Mountain and beyond",
+        text: "dragons rerr"
     }
 ]
 
 var nextID = 2;
+var state = {
+    currentSprint: null
+}
+
 
 const storyTemplate = {
     id: null,
     image: null,
     title: "",
     description: "",
+    text: "",
 }
 
 function formatStoryButton(data) {
@@ -150,8 +157,8 @@ function addNewStory() {
 }
 
 function setTab(tab) {
-    $("#sidebar-content").empty();
     if (tab == "stories") {
+        $("#sidebar-content").empty();
         $("#sidebar-content").append(`
             <div id="story-list">
                 <button id="add-story" class="button is-primary is-rounded">
@@ -165,6 +172,9 @@ function setTab(tab) {
         for (let story of stories) {
             $("#add-story").before(formatStoryButton(story));
         }
+    }
+    if (tab == "sprints") {
+        loadSprintTab();
     }
 }
 
@@ -190,6 +200,24 @@ function deleteStory(deleteButton) {
         $("#delete-yes").unbind("click");
     });
     $("#delete-confirm").css("visibility", "visible");
+}
+
+function selectStory(button) {
+    if ($(".selected-story").length) {
+        let prevStoryContainer = $(".selected-story");
+        $(prevStoryContainer).removeClass("selected-story");
+        let prevId = $(prevStoryContainer).data('story-id');
+        let prevStory = stories.filter(s => s.id == prevId)[0];
+        prevStory.text = $("#editor").html();
+    }
+
+    let storyContainer = $(button).closest('.story');
+    $(storyContainer).addClass("selected-story");
+    let id = $(storyContainer).data('story-id');
+    let story = stories.filter(s => s.id == id)[0];
+    $("#editor").html(story.text);
+
+    updateWordcount();
 }
 
 function editStory(editButton) {
@@ -239,33 +267,164 @@ function editStory(editButton) {
 }
 
 function updateWordcount() {
-    let words = $("#editor").text().match(/\S+/g);
-    let wordcount = words ? words.length : 0;
+    let wordcount = getWordcount();
     $("#quick-wordcount").text(wordcount + (wordcount == 1 ? " word" : " words"));
+
+    if ($("#sprint-timer").length && state.currentSprint && !state.currentSprint.finished) {
+        let progress = wordcount - state.currentSprint.startWordcount;
+        $("#sprint-timer-progress").text(progress);
+    }   
+}
+
+function getWordcount() {
+    // this is a hacky way to turn, for example, "<div>hello</div><div>this is another line</div>" into "hello this is another line"
+    // if i just tried getting using $("editor").text(), it would return "hellothis is another line" so the wordcount would be wrong
+    let words = $("#editor").html().replace(/(<([^>]+)>)/ig, ' ').replace(/&nbsp;/ig, ' ').match(/\S+/g); 
+    return words ? words.length : 0;
+}
+
+function startSprint() {
+    state.currentSprint = {};
+    state.currentSprint.duration = Math.floor($("#edit-sprint-duration").val()) * 60;
+    state.currentSprint.startTime = Date.now();
+    state.currentSprint.goal = $("#edit-sprint-goal").val();
+    state.currentSprint.timerID = setInterval(updateSprint, 1000);
+    state.currentSprint.finished = false;
+    state.currentSprint.startWordcount = getWordcount();
+
+    loadSprintTab();
+}
+
+function endSprint() {
+    if (!state.currentSprint)
+        return
+
+    clearInterval(state.currentSprint.timerID);
+    state.currentSprint.finished = true;
+    state.currentSprint.finalWordcount = getWordcount() - state.currentSprint.startWordcount;
+
+    if ($("#sprint-timer").length)
+        loadSprintTab();
+}
+
+function resetSprint() {
+    state.currentSprint = null;
+    
+    loadSprintTab();
+}
+
+function updateSprint() {
+    if (!state.currentSprint)
+        return
+
+    let secRemaining = state.currentSprint.duration - (Date.now() - state.currentSprint.startTime) / 1000;
+    if ($("#sprint-timer").length) {
+        $("#sprint-timer-minutes").text(secRemaining < 0 ? 0 : Math.floor(secRemaining / 60));
+        $("#sprint-timer-seconds").text(secRemaining < 0 ? 0 : Math.floor(secRemaining % 60));
+    }
+    if (secRemaining <= 0)
+        endSprint();
+}
+
+function loadSprintTab() {
+    $("#sidebar-content").empty();
+    if (state.currentSprint && state.currentSprint.finished) {
+        $("#sidebar-content").append(`
+            <div id="sprint-timer">
+                <p><span id="sprint-timer-minutes">0</span>m <span id="sprint-timer-seconds">0</span>s</p>
+                <p><span id="sprint-timer-progress">${state.currentSprint.finalWordcount}</span> words</p>
+                <p>All done!</p>
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-primary" id="reset-sprint">Reset</button>
+                    </div>
+                </div>
+            </div>
+        `);      
+    }
+    else if (state.currentSprint) {
+        let secRemaining = state.currentSprint.duration - (Date.now() - state.currentSprint.startTime) / 1000;
+        let minutes = secRemaining < 0 ? 0 : Math.floor(secRemaining / 60);
+        let seconds = secRemaining < 0 ? 0 : Math.floor(secRemaining % 60);
+        let wordcount = getWordcount() - state.currentSprint.startWordcount;
+        $("#sidebar-content").append(`
+            <div id="sprint-timer">
+                <p><span id="sprint-timer-minutes">${minutes}</span>m <span id="sprint-timer-seconds">${seconds}</span>s</p>
+                <p><span id="sprint-timer-progress">${wordcount}</span> words</p>
+            </div>
+        `);      
+    }
+    else {
+        $("#sidebar-content").append(`
+            <div id="sprint-form">
+                <div class="field">
+                    <label class="label">Duration</label>
+                    <div class="columns is-vcentered is-gapless">
+                        <div class="column">
+                            <input class="input" id="edit-sprint-duration" type="number" value="15" min="1" max="100"> 
+                        </div>
+                        <div class="column is-one-fifth ml-3"">
+                            minutes
+                        </div>
+                    </div>
+                </div>
+                    
+                <div class="field">
+                    <label class="label">Word goal (optional)</label>
+                    <div class="columns is-vcentered is-gapless">
+                        <div class="column">
+                            <input class="input" id="edit-sprint-goal" type="number" value="" min="1" max="100000"> 
+                        </div>
+                        <div class="column is-one-fifth ml-3"">
+                            words
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-primary" id="start-sprint">Sprint!</button>
+                    </div>
+                </div>
+            </div>
+        `);
+    }
 }
 
 $(document).ready(() => {
     setTab("stories");
     updateWordcount();
 
-    $("#sidebar-content").on("click", "#story-list #add-story", () => {
+    $("#sidebar-content").on("click", "#add-story", () => {
         addNewStory()
     });
 
-    $("#sidebar-content").on("mouseover", "#story-list .story", function() { 
+    $("#sidebar-content").on("mouseover", ".story", function() { 
         $(this).children(".story-options").css("display", "inline"); 
     });
 
-    $("#sidebar-content").on("mouseleave", "#story-list .story", function() { 
+    $("#sidebar-content").on("mouseleave", ".story", function() { 
         $(this).children(".story-options").css("display", "none"); 
     });
     
-    $("#sidebar-content").on("click", "#story-list .story .story-options .story-edit", function() { 
+    $("#sidebar-content").on("click", ".story-edit", function() { 
         editStory(this);
     });
     
-    $("#sidebar-content").on("click", "#story-list .story .story-options .story-delete", function() { 
+    $("#sidebar-content").on("click", ".story-delete", function() { 
         deleteStory(this);
+    });
+    
+    $("#sidebar-content").on("click", ".story-details", function() { 
+        selectStory(this);
+    });
+    
+    $("#sidebar-content").on("click", "#start-sprint", function() { 
+        startSprint();
+    });
+
+    $("#sidebar-content").on("click", "#reset-sprint", function() { 
+        resetSprint();
     });
     
     $("#delete-no").click(() => {
