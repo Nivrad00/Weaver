@@ -20,7 +20,8 @@ var stories = [
 
 var nextID = 2;
 var state = {
-    currentSprint: null
+    currentSprint: null,
+    selectedStory: null
 }
 
 
@@ -95,7 +96,7 @@ function formatStoryButton(data) {
 function formatEditForm(data) {
     return `
         <div class="story" data-story-id="${data.id}" id="edit-form">
-            <div class="box mb-4  story-details">
+            <div class="box mb-4 story-details">
                 <div class="field">
                     <label class="label">Cover</label>
                     <div class="file has-name is-fullwidth">
@@ -170,7 +171,10 @@ function setTab(tab) {
             </div>
         `);
         for (let story of stories) {
-            $("#add-story").before(formatStoryButton(story));
+            let storyContainer = $(formatStoryButton(story)).insertBefore('#add-story');
+            if (state.selectedStory && story.id == state.selectedStory.id) {
+                $(storyContainer).addClass("selected-story");
+            }           
         }
     }
     if (tab == "sprints") {
@@ -216,6 +220,7 @@ function selectStory(button) {
     let id = $(storyContainer).data('story-id');
     let story = stories.filter(s => s.id == id)[0];
     $("#editor").html(story.text);
+    state.selectedStory = story;
 
     updateWordcount();
 }
@@ -240,7 +245,11 @@ function editStory(editButton) {
         if ($("#edit-cover").files && $("#edit-cover").files[0]) {
         }
         
-        $("#edit-form").replaceWith(formatStoryButton(story));
+        let storyContainer = $(formatStoryButton(story)).insertBefore("#edit-form");
+        $("#edit-form").remove();
+
+        if (state.selectedStory && story.id == state.selectedStory.id)
+            $(storyContainer).addClass("selected-story");
     });
 
     $("#edit-cover").on('change', function() {
@@ -273,6 +282,11 @@ function updateWordcount() {
     if ($("#sprint-timer").length && state.currentSprint && !state.currentSprint.finished) {
         let progress = wordcount - state.currentSprint.startWordcount;
         $("#sprint-timer-progress").text(progress);
+        if (state.currentSprint.goal) {
+            $("#sprint-timer-progress-bar").val(100 * progress / state.currentSprint.goal);
+            if (progress >= state.currentSprint.goal)
+                endSprint();
+        }
     }   
 }
 
@@ -285,9 +299,9 @@ function getWordcount() {
 
 function startSprint() {
     state.currentSprint = {};
-    state.currentSprint.duration = Math.floor($("#edit-sprint-duration").val()) * 60;
+    state.currentSprint.duration = Math.floor($("#edit-sprint-duration").val()) * 60 + 0.9;
     state.currentSprint.startTime = Date.now();
-    state.currentSprint.goal = $("#edit-sprint-goal").val();
+    state.currentSprint.goal = Math.floor($("#edit-sprint-goal").val());
     state.currentSprint.timerID = setInterval(updateSprint, 1000);
     state.currentSprint.finished = false;
     state.currentSprint.startWordcount = getWordcount();
@@ -308,6 +322,10 @@ function endSprint() {
 }
 
 function resetSprint() {
+    if (!state.currentSprint)
+        return
+
+    clearInterval(state.currentSprint.timerID);
     state.currentSprint = null;
     
     loadSprintTab();
@@ -330,13 +348,12 @@ function loadSprintTab() {
     $("#sidebar-content").empty();
     if (state.currentSprint && state.currentSprint.finished) {
         $("#sidebar-content").append(`
-            <div id="sprint-timer">
-                <p><span id="sprint-timer-minutes">0</span>m <span id="sprint-timer-seconds">0</span>s</p>
-                <p><span id="sprint-timer-progress">${state.currentSprint.finalWordcount}</span> words</p>
-                <p>All done!</p>
-                <div class="field">
+            <div id="sprint-timer" class="box has-text-centered has-background-primary has-text-white">
+                <p class="is-size-3 mb-3">All done!</h3>
+                <p class="mb-5"><span id="sprint-timer-progress">${state.currentSprint.finalWordcount}</span> words</p>
+                <p class="field">
                     <div class="control">
-                        <button class="button is-primary" id="reset-sprint">Reset</button>
+                        <button class="button is-white" id="reset-sprint">Reset</button>
                     </div>
                 </div>
             </div>
@@ -347,16 +364,42 @@ function loadSprintTab() {
         let minutes = secRemaining < 0 ? 0 : Math.floor(secRemaining / 60);
         let seconds = secRemaining < 0 ? 0 : Math.floor(secRemaining % 60);
         let wordcount = getWordcount() - state.currentSprint.startWordcount;
-        $("#sidebar-content").append(`
-            <div id="sprint-timer">
-                <p><span id="sprint-timer-minutes">${minutes}</span>m <span id="sprint-timer-seconds">${seconds}</span>s</p>
-                <p><span id="sprint-timer-progress">${wordcount}</span> words</p>
-            </div>
-        `);      
+        if (state.currentSprint.goal > 0) {
+            $("#sidebar-content").append(`
+                <div id="sprint-timer" class="box has-text-centered">
+                    <p class="mb-3"><span id="sprint-timer-minutes" class="is-size-3">${minutes}</span>m <span id="sprint-timer-seconds" class="is-size-3 ml-1">${seconds}</span>s</p>
+                    <p class="mb-5">
+                        <span id="sprint-timer-progress">${wordcount}</span> / ${state.currentSprint.goal} words 
+                        <progress id="sprint-timer-progress-bar" class="progress is-warning" value="0" max="100"></progress>
+                    </p>
+                    <p class="field">
+                        <div class="control">
+                            <button class="button is-primary" id="reset-sprint">Cancel</button>
+                        </div>
+                    </p>
+                </div>
+            `);     
+        }
+        else {
+            $("#sidebar-content").append(`
+                <div id="sprint-timer" class="box has-text-centered">
+                    <p class="mb-3"><span id="sprint-timer-minutes" class="is-size-3">${minutes}</span>m <span id="sprint-timer-seconds" class="is-size-3 ml-1">${seconds}</span>s</p>
+                    <p class="mb-5">
+                        <span id="sprint-timer-progress">${wordcount}</span> words 
+                    </p>
+                    <p class="field">
+                        <div class="control">
+                            <button class="button is-primary" id="reset-sprint">Cancel</button>
+                        </div>
+                    </p>
+                </div>
+            `);     
+
+        }
     }
     else {
         $("#sidebar-content").append(`
-            <div id="sprint-form">
+            <div id="sprint-form" class="box">
                 <div class="field">
                     <label class="label">Duration</label>
                     <div class="columns is-vcentered is-gapless">
@@ -415,7 +458,7 @@ $(document).ready(() => {
         deleteStory(this);
     });
     
-    $("#sidebar-content").on("click", ".story-details", function() { 
+    $("#sidebar-content").on("click", "a.story-details", function() { 
         selectStory(this);
     });
     
