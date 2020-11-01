@@ -12,6 +12,11 @@ $(function() {
     firebase.initializeApp(firebaseConfig);
 
     const auth = firebase.auth();
+    var data = firebase.database();
+
+    //acess the user database
+    // const database = firebase.database();
+    // const users = database.ref("weaver-users");
 
     //status change
     auth.onAuthStateChanged(user => {
@@ -39,11 +44,25 @@ $(function() {
 
         const email = $('#loginEmail').val();
         const password = $('#loginPwd').val();
+        //temp user Id for testing
+        const userId = $('#loginEmail').val();
 
         
         auth.createUserWithEmailAndPassword(email, password).then(cred => {
             console.log(cred.user);
             window.location.href='home.html';
+            const userId = cred.user.uid;
+            const userName = email.substr(0, email.indexOf('@'));
+
+            function writeUserData(userId, name, email, stories) {
+                firebase.database().ref('users/' + userId).set({
+                  username: name,
+                  email: email,
+                  stories: stories
+                });
+              }
+            writeUserData(userId, userName, email, {});
+            alert(cred.user);
         }).catch(error => {
             console.log('Signup error: ' + error);
             $("#loginmsg").html(`<span style="color:red">${error.message}</span>`)
@@ -86,5 +105,22 @@ $(function() {
         })
     })
 
-    
+    // Get a database reference to our blog
+
+
+
+
+    // var usersRef = ref.child("data");
+//     users.set({
+//     testUserOne: {
+//         date_of_birth: "June 23, 1912",
+//         full_name: "test One"
+//     },
+//     secondTest: {
+//         date_of_birth: "December 9, 1906",
+//         full_name: "Second Test"
+//     }
+// })
+
+
 })
