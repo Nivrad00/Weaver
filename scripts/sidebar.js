@@ -1,4 +1,5 @@
 /* placeholder "database" :) */
+
 var stories = [
     {
         id: 0,
@@ -19,11 +20,6 @@ var stories = [
 ]
 
 var nextID = 2;
-var state = {
-    currentSprint: null,
-    selectedStory: null
-}
-
 
 const storyTemplate = {
     id: null,
@@ -32,6 +28,52 @@ const storyTemplate = {
     description: "",
     text: "",
 }
+
+function modelAddStory() {
+    let story = {
+        ...storyTemplate
+    };
+    story.id = nextID;
+    nextID ++;
+    stories.push(story);
+    return story;
+}
+
+function modelGetAllStories() {
+    return stories;
+}
+
+function modelGetStory(id) {
+    return stories.filter(s => s.id == id)[0];
+}
+
+function modelDeleteStory(id) {
+    stories = stories.filter(s => s.id != id);
+}
+
+function modelUpdateStory({id, title, description, content}) {
+    if (id == undefined)
+        return;
+    story = stories.filter(s => s.id == id)[0];
+    if (title)
+        story.title = title;
+    if (description)
+        story.description = description
+    if (content)
+        story.text = content;
+    return story;
+}
+
+//end placeholder 
+
+
+
+
+var state = {
+    currentSprint: null,
+    selectedStory: null
+}
+
 
 function formatStoryButton(data) {
     if (!data.image) {
@@ -148,12 +190,7 @@ function formatEditForm(data) {
 }
 
 function addNewStory() {
-    let story = {
-        ...storyTemplate
-    };
-    story.id = nextID;
-    nextID ++;
-    stories.push(story);
+    let story = modelAddStory();
     $("#add-story").before(formatStoryButton(story));
 }
 
@@ -170,7 +207,7 @@ function setTab(tab) {
                 </button>
             </div>
         `);
-        for (let story of stories) {
+        for (let story of modelGetAllStories()) {
             let storyContainer = $(formatStoryButton(story)).insertBefore('#add-story');
             if (state.selectedStory && story.id == state.selectedStory.id) {
                 $(storyContainer).addClass("selected-story");
@@ -179,6 +216,25 @@ function setTab(tab) {
     }
     if (tab == "sprints") {
         loadSprintTab();
+    }
+    if (tab == "prompts") {
+        $("#sidebar-content").empty();
+        $("#sidebar-content").append(`
+            <div id="prompt-container" class="box has-text-centered">
+                <div id="prompt">
+                    <figure class="image" id="prompt-image">
+                        <img src="images/weaver.png">
+                    </figure>
+                    <p class="is-size-3" id="prompt-text">Text</p>
+                </div>
+                <p class="field">
+                    <div class="control">
+                        <button class="button is-primary" id="generate-prompt">New Prompt</button>
+                    </div>
+                </p>
+            </div>
+        `);
+
     }
 }
 
@@ -194,12 +250,12 @@ function deleteStory(deleteButton) {
     $(deleteButton).mouseleave();
     let storyButton = $(deleteButton).closest('.story');
     let id = $(storyButton).data('story-id');
-    let story = stories.filter(s => s.id == id)[0];
+    let story = modelGetStory(id);
 
     $("#delete-name").text(story.title || "Untitled");
     $("#delete-yes").click(() => {
         $(storyButton).remove();
-        stories = stories.filter(s => s.id != id);
+        modelDeleteStory(id);
         $("#delete-confirm").css("visibility", "hidden");
         $("#delete-yes").unbind("click");
     });
@@ -207,22 +263,28 @@ function deleteStory(deleteButton) {
 }
 
 function selectStory(button) {
+    let storyContainer = $(button).closest('.story');
+    let id = $(storyContainer).data('story-id');
+    if (state.selectedStory && state.selectedStory.id == id)
+        return;
+
     if ($(".selected-story").length) {
         let prevStoryContainer = $(".selected-story");
         $(prevStoryContainer).removeClass("selected-story");
         let prevId = $(prevStoryContainer).data('story-id');
-        let prevStory = stories.filter(s => s.id == prevId)[0];
-        prevStory.text = $("#editor").html();
+        modelUpdateStory({
+            id: prevId,
+            content: $("#editor").html()
+        });
     }
 
-    let storyContainer = $(button).closest('.story');
     $(storyContainer).addClass("selected-story");
-    let id = $(storyContainer).data('story-id');
-    let story = stories.filter(s => s.id == id)[0];
+    let story = modelGetStory(id);
     $("#editor").html(story.text);
     state.selectedStory = story;
 
     updateWordcount();
+    resetSprint();
 }
 
 function editStory(editButton) {
@@ -230,7 +292,7 @@ function editStory(editButton) {
 
     let storyButton = $(editButton).closest('.story');
     let id = $(storyButton).data('story-id');
-    let story = stories.filter(s => s.id == id)[0];
+    let story = modelGetStory(id);
     storyButton.replaceWith(formatEditForm(story));
 
     $("#edit-cancel").click(() => {
@@ -238,14 +300,13 @@ function editStory(editButton) {
     });
     
     $("#edit-submit").click(() => {
-        story.title = $("#edit-title").val();
-        story.description = $("#edit-description").val();
-
-        console.log($("#edit-cover").files);
-        if ($("#edit-cover").files && $("#edit-cover").files[0]) {
-        }
+        let updatedStory = modelUpdateStory({
+            id: id,
+            title: $("#edit-title").val(),
+            description: $("#edit-description").val()
+        });
         
-        let storyContainer = $(formatStoryButton(story)).insertBefore("#edit-form");
+        let storyContainer = $(formatStoryButton(updatedStory)).insertBefore("#edit-form");
         $("#edit-form").remove();
 
         if (state.selectedStory && story.id == state.selectedStory.id)
@@ -253,7 +314,6 @@ function editStory(editButton) {
     });
 
     $("#edit-cover").on('change', function() {
-        console.log(this);
         if (this.files && this.files[0]) {
             $('#cover-name').text(this.files[0].name);
             $(this).css('display', 'absolute');
@@ -328,7 +388,8 @@ function resetSprint() {
     clearInterval(state.currentSprint.timerID);
     state.currentSprint = null;
     
-    loadSprintTab();
+    if ($("#sprint-timer").length)
+        loadSprintTab();
 }
 
 function updateSprint() {
@@ -434,6 +495,12 @@ function loadSprintTab() {
     }
 }
 
+function generatePrompt() {
+    if ($("#prompt-text").length > 0) {
+        $("#prompt-text").text($.get('random_word'));
+    }
+}
+
 $(document).ready(() => {
     setTab("stories");
     updateWordcount();
@@ -470,6 +537,10 @@ $(document).ready(() => {
         resetSprint();
     });
     
+    $("#sidebar-content").on("click", "#generate-prompt", function() { 
+        generatePrompt();
+    });
+
     $("#delete-no").click(() => {
         $("#delete-confirm").css("visibility", "hidden");
         $("#delete-yes").unbind("click");
