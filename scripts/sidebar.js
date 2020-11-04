@@ -71,7 +71,13 @@ function modelUpdateStory({id, title, description, content}) {
 
 var state = {
     currentSprint: null,
-    selectedStory: null
+    selectedStory: null,
+    prompt: {
+        word: '',
+        image: '',
+        definition: '',
+        attribution: ''
+    }
 }
 
 
@@ -222,10 +228,12 @@ function setTab(tab) {
         $("#sidebar-content").append(`
             <div id="prompt-container" class="box has-text-centered">
                 <div id="prompt">
-                    <figure class="image" id="prompt-image">
-                        <img src="images/weaver.png">
+                    <figure class="image">
+                        <img src="${state.prompt.image || 'images/weaver.png'}" id="prompt-image">
                     </figure>
-                    <p class="is-size-3" id="prompt-text">Text</p>
+                    <p class="is-size-7 has-text-right fine-text" id="prompt-attribution">${state.prompt.attribution}</p>
+                    <p class="mt-2 is-size-3" id="prompt-text">${state.prompt.word}</p>
+                    <p class="mb-2" id="prompt-definition">${state.prompt.definition}</p>
                 </div>
                 <p class="field">
                     <div class="control">
@@ -495,9 +503,78 @@ function loadSprintTab() {
     }
 }
 
-function generatePrompt() {
-    if ($("#prompt-text").length > 0) {
-        $("#prompt-text").text($.get('random_word'));
+async function generatePrompt() {
+    // there's so many things wrong with this function, but it works
+    // the random-word api was returning ridiculous obscure words
+    // so i made it repeatedly call random-word until it finds a word that's in the dictionary (or 5 seconds pass)
+    // then it returns the word + definition
+    // it's terrible
+
+    if ($("#prompt-container").length > 0) {
+        $("#prompt-text").text('...');
+        $("#prompt-definition").text('');
+        $("#prompt-attribution").text('');
+        $("#prompt-image").attr('src', '');
+
+        let unsplash, dictionary, word, definition, image, attribution;
+        let timeout = false;
+        setTimeout(() => timeout = true, 5000);
+
+        while (!timeout) {
+            try {
+                word = await $.get('https://random-word.ryanrk.com/api/en/word/random');
+            } catch {
+                $("#prompt-text").text('Error retrieving word.');
+                return;
+            }
+            
+            try {
+                dictionary = await $.get('https://api.dictionaryapi.dev/api/v2/entries/en/' + word);
+            } catch (e) {
+                if (e.responseJSON.title == 'No Definitions Found')
+                    continue;
+                else {
+                    $("#prompt-text").text('Error retrieving definition.');
+                    return;
+                }
+            }
+
+            try {
+                definition = dictionary[0].meanings[0].definitions[0].definition;
+            } catch {
+                continue;
+            }
+            
+            try {
+                unsplash = await $.get("https://api.unsplash.com/photos/random?client_id=Zd2AWcZrAxyxixZP5Q3ks-TVRlOIvN7A33ovU-wkmyc"); 
+            } catch {
+                $("#prompt-text").text('Error retrieving image.');
+                return;
+            }
+
+            break;
+        }
+
+        if (timeout) {
+            $("#prompt-text").text('Process timed out.');
+            return;
+        }
+            
+        image = unsplash.urls.raw + '&w=300&h=200&fit=crop';
+        attribution = `Photo by <a href="https://unsplash.com/@${unsplash.user.username}?utm_source=weaver&utm_medium=referral">${unsplash.user.name}</a> on <a href="https://unsplash.com/?utm_source=weaver&utm_medium=referral">Unsplash</a>`
+        
+        $("#prompt-image").off('load').on('load', function() {
+            $("#prompt-text").text(word);
+            $("#prompt-definition").text(definition);
+            $("#prompt-attribution").html(attribution);
+        }).attr('src', image);
+
+        state.prompt = {
+            word: word,
+            definition: definition,
+            image: image,
+            attribution: attribution
+        }
     }
 }
 

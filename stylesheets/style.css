@@ -120,3 +120,12 @@ body {
 .selected-story p, .selected-story .story-edit i {
 	color: white;
 }
+
+.fine-text {
+	color: lightgrey;
+}
+
+.fine-text a {
+	color: lightgrey;
+	text-decoration: underline;
+}
