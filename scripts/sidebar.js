@@ -516,56 +516,36 @@ async function generatePrompt() {
         $("#prompt-attribution").text('');
         $("#prompt-image").attr('src', '');
 
-        let unsplash, dictionary, word, definition, image, attribution;
-        let timeout = false;
-        setTimeout(() => timeout = true, 5000);
+        let unsplash, wordnik, dictionary, definition, word, image, attribution;
 
-        while (!timeout) {
-            try {
-                word = await $.get('https://random-word.ryanrk.com/api/en/word/random');
-            } catch {
-                $("#prompt-text").text('Error retrieving word.');
-                return;
-            }
-            
-            try {
-                dictionary = await $.get('https://api.dictionaryapi.dev/api/v2/entries/en/' + word);
-            } catch (e) {
-                if (e.responseJSON.title == 'No Definitions Found')
-                    continue;
-                else {
-                    $("#prompt-text").text('Error retrieving definition.');
-                    return;
-                }
-            }
-
-            try {
-                definition = dictionary[0].meanings[0].definitions[0].definition;
-            } catch {
-                continue;
-            }
-            
-            try {
-                unsplash = await $.get("https://api.unsplash.com/photos/random?client_id=Zd2AWcZrAxyxixZP5Q3ks-TVRlOIvN7A33ovU-wkmyc"); 
-            } catch {
-                $("#prompt-text").text('Error retrieving image.');
-                return;
-            }
-
-            break;
-        }
-
-        if (timeout) {
-            $("#prompt-text").text('Process timed out.');
+        try {
+            wordnik = await $.get('http://api.wordnik.com/v4/words.json/randomWord?api_key=85r46i2i5dukj9hk1dmy0ql9m9h9gfe93tnq9r1g84pk7u057');
+        } catch {
+            $("#prompt-text").text('Couldn\'t retrieve prompt, try again.');
             return;
         }
-            
-        image = unsplash.urls.raw + '&w=300&h=200&fit=crop';
-        attribution = `Photo by <a href="https://unsplash.com/@${unsplash.user.username}?utm_source=weaver&utm_medium=referral">${unsplash.user.name}</a> on <a href="https://unsplash.com/?utm_source=weaver&utm_medium=referral">Unsplash</a>`
         
+        try {
+            dictionary = await $.get(`https://api.dictionaryapi.dev/api/v2/entries/en/` + wordnik.word);
+            definition = dictionary[0].meanings[0].definitions[0].definition;
+            word = dictionary[0].word;
+        } catch (e) {
+            $("#prompt-text").text('Couldn\'t retrieve prompt, try again.');
+            return;
+        }
+
+        try {
+            unsplash = await $.get("https://api.unsplash.com/photos/random?client_id=Zd2AWcZrAxyxixZP5Q3ks-TVRlOIvN7A33ovU-wkmyc"); 
+            image = unsplash.urls.raw + '&w=300&h=200&fit=crop';
+            attribution = `Photo by <a href="https://unsplash.com/@${unsplash.user.username}?utm_source=weaver&utm_medium=referral">${unsplash.user.name}</a> on <a href="https://unsplash.com/?utm_source=weaver&utm_medium=referral">Unsplash</a>`
+        } catch {
+            $("#prompt-text").text('Couldn\'t retrieve prompt, try again.');
+            return;
+        }
+
         $("#prompt-image").off('load').on('load', function() {
             $("#prompt-text").text(word);
-            $("#prompt-definition").text(definition);
+            $("#prompt-definition").html(definition);
             $("#prompt-attribution").html(attribution);
         }).attr('src', image);
 
