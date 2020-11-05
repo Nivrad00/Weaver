@@ -519,27 +519,30 @@ async function generatePrompt() {
         let unsplash, wordnik, dictionary, definition, word, image, attribution;
 
         try {
-            wordnik = await $.get('http://api.wordnik.com/v4/words.json/randomWord?api_key=85r46i2i5dukj9hk1dmy0ql9m9h9gfe93tnq9r1g84pk7u057');
-        } catch {
-            $("#prompt-text").text('Couldn\'t retrieve prompt, try again.');
-            return;
-        }
-        
-        try {
-            dictionary = await $.get(`https://api.dictionaryapi.dev/api/v2/entries/en/` + wordnik.word);
-            definition = dictionary[0].meanings[0].definitions[0].definition;
-            word = dictionary[0].word;
-        } catch (e) {
-            $("#prompt-text").text('Couldn\'t retrieve prompt, try again.');
-            return;
-        }
+            wordnik = await $.get('http://api.wordnik.com/v4/words.json/randomWords?limit=10&api_key=85r46i2i5dukj9hk1dmy0ql9m9h9gfe93tnq9r1g84pk7u057');
+            
+            let found = false;
+            for (let data of wordnik) {
+                try {
+                    dictionary = await $.get(`https://api.dictionaryapi.dev/api/v2/entries/en/` + data.word);
+                    definition = dictionary[0].meanings[0].definitions[0].definition;
+                    word = dictionary[0].word;
+                } catch {
+                    continue;
+                }
+                found = true;
+                break;
+            }
+            if (!found)
+                $("#prompt-text").text('Couldn\'t retrieve prompt. Try again.');
 
-        try {
             unsplash = await $.get("https://api.unsplash.com/photos/random?client_id=Zd2AWcZrAxyxixZP5Q3ks-TVRlOIvN7A33ovU-wkmyc"); 
             image = unsplash.urls.raw + '&w=300&h=200&fit=crop';
             attribution = `Photo by <a href="https://unsplash.com/@${unsplash.user.username}?utm_source=weaver&utm_medium=referral">${unsplash.user.name}</a> on <a href="https://unsplash.com/?utm_source=weaver&utm_medium=referral">Unsplash</a>`
-        } catch {
-            $("#prompt-text").text('Couldn\'t retrieve prompt, try again.');
+        } 
+        
+        catch {
+            $("#prompt-text").text('Couldn\'t retrieve prompt. Try again.');
             return;
         }
 
