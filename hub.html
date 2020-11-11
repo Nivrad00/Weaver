@@ -8,6 +8,7 @@
 
     <link rel="stylesheet" href="node_modules/bulma/css/bulma.css" />
     <link rel="stylesheet" href="stylesheets/style.css" />
+    <link rel="stylesheet" href="stylesheets/hub.css" />
 
     <script src="scripts/jquery-3.5.1.min.js"></script>
     <script src="https://kit.fontawesome.com/e690d06293.js" crossorigin="anonymous"></script>
@@ -43,20 +44,32 @@
         </div>
     </nav>
 
-    <section class="hero is-primary ">
+    <section class="hero is-primary">
         <div class="hero-body has-text-centered">
             <div class="container">
               <h1 class="title">
                 The Hub
               </h1>
               <h2 class="subtitle is-italic">
-                Where 
+                Let Your Story be Heard 
               </h2>
             </div>
           </div>
     </section>
 
-    
+    <section class="section">
+        <div id="hubStories">
+
+        </div>
+    </section>
+
+    <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-firestore.js"></script>
+
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/hub.js"></script>
     
 
 </body>
