@@ -1,4 +1,5 @@
 /* placeholder "database" :) */
+
 var stories = [
     {
         id: 0,
@@ -19,10 +20,6 @@ var stories = [
 ]
 
 var nextID = 2;
-var state = {
-    currentSprint: null
-}
-
 
 const storyTemplate = {
     id: null,
@@ -31,6 +28,58 @@ const storyTemplate = {
     description: "",
     text: "",
 }
+
+function modelAddStory() {
+    let story = {
+        ...storyTemplate
+    };
+    story.id = nextID;
+    nextID ++;
+    stories.push(story);
+    return story;
+}
+
+function modelGetAllStories() {
+    return stories;
+}
+
+function modelGetStory(id) {
+    return stories.filter(s => s.id == id)[0];
+}
+
+function modelDeleteStory(id) {
+    stories = stories.filter(s => s.id != id);
+}
+
+function modelUpdateStory({id, title, description, content}) {
+    if (id == undefined)
+        return;
+    story = stories.filter(s => s.id == id)[0];
+    if (title)
+        story.title = title;
+    if (description)
+        story.description = description
+    if (content)
+        story.text = content;
+    return story;
+}
+
+//end placeholder 
+
+
+
+
+var state = {
+    currentSprint: null,
+    selectedStory: null,
+    prompt: {
+        word: '',
+        image: '',
+        definition: '',
+        attribution: ''
+    }
+}
+
 
 function formatStoryButton(data) {
     if (!data.image) {
@@ -95,7 +144,7 @@ function formatStoryButton(data) {
 function formatEditForm(data) {
     return `
         <div class="story" data-story-id="${data.id}" id="edit-form">
-            <div class="box mb-4  story-details">
+            <div class="box mb-4 story-details">
                 <div class="field">
                     <label class="label">Cover</label>
                     <div class="file has-name is-fullwidth">
@@ -147,12 +196,7 @@ function formatEditForm(data) {
 }
 
 function addNewStory() {
-    let story = {
-        ...storyTemplate
-    };
-    story.id = nextID;
-    nextID ++;
-    stories.push(story);
+    let story = modelAddStory();
     $("#add-story").before(formatStoryButton(story));
 }
 
@@ -169,12 +213,36 @@ function setTab(tab) {
                 </button>
             </div>
         `);
-        for (let story of stories) {
-            $("#add-story").before(formatStoryButton(story));
+        for (let story of modelGetAllStories()) {
+            let storyContainer = $(formatStoryButton(story)).insertBefore('#add-story');
+            if (state.selectedStory && story.id == state.selectedStory.id) {
+                $(storyContainer).addClass("selected-story");
+            }           
         }
     }
     if (tab == "sprints") {
         loadSprintTab();
+    }
+    if (tab == "prompts") {
+        $("#sidebar-content").empty();
+        $("#sidebar-content").append(`
+            <div id="prompt-container" class="box has-text-centered">
+                <div id="prompt">
+                    <figure class="image">
+                        <img src="${state.prompt.image || 'images/weaver.png'}" id="prompt-image">
+                    </figure>
+                    <p class="is-size-7 has-text-right fine-text" id="prompt-attribution">${state.prompt.attribution}</p>
+                    <p class="mt-2 is-size-3" id="prompt-text">${state.prompt.word}</p>
+                    <p class="mb-2" id="prompt-definition">${state.prompt.definition}</p>
+                </div>
+                <p class="field">
+                    <div class="control">
+                        <button class="button is-primary" id="generate-prompt">New Prompt</button>
+                    </div>
+                </p>
+            </div>
+        `);
+
     }
 }
 
@@ -190,12 +258,12 @@ function deleteStory(deleteButton) {
     $(deleteButton).mouseleave();
     let storyButton = $(deleteButton).closest('.story');
     let id = $(storyButton).data('story-id');
-    let story = stories.filter(s => s.id == id)[0];
+    let story = modelGetStory(id);
 
     $("#delete-name").text(story.title || "Untitled");
     $("#delete-yes").click(() => {
         $(storyButton).remove();
-        stories = stories.filter(s => s.id != id);
+        modelDeleteStory(id);
         $("#delete-confirm").css("visibility", "hidden");
         $("#delete-yes").unbind("click");
     });
@@ -203,21 +271,28 @@ function deleteStory(deleteButton) {
 }
 
 function selectStory(button) {
+    let storyContainer = $(button).closest('.story');
+    let id = $(storyContainer).data('story-id');
+    if (state.selectedStory && state.selectedStory.id == id)
+        return;
+
     if ($(".selected-story").length) {
         let prevStoryContainer = $(".selected-story");
         $(prevStoryContainer).removeClass("selected-story");
         let prevId = $(prevStoryContainer).data('story-id');
-        let prevStory = stories.filter(s => s.id == prevId)[0];
-        prevStory.text = $("#editor").html();
+        modelUpdateStory({
+            id: prevId,
+            content: $("#editor").html()
+        });
     }
 
-    let storyContainer = $(button).closest('.story');
     $(storyContainer).addClass("selected-story");
-    let id = $(storyContainer).data('story-id');
-    let story = stories.filter(s => s.id == id)[0];
+    let story = modelGetStory(id);
     $("#editor").html(story.text);
+    state.selectedStory = story;
 
     updateWordcount();
+    resetSprint();
 }
 
 function editStory(editButton) {
@@ -225,7 +300,7 @@ function editStory(editButton) {
 
     let storyButton = $(editButton).closest('.story');
     let id = $(storyButton).data('story-id');
-    let story = stories.filter(s => s.id == id)[0];
+    let story = modelGetStory(id);
     storyButton.replaceWith(formatEditForm(story));
 
     $("#edit-cancel").click(() => {
@@ -233,18 +308,20 @@ function editStory(editButton) {
     });
     
     $("#edit-submit").click(() => {
-        story.title = $("#edit-title").val();
-        story.description = $("#edit-description").val();
-
-        console.log($("#edit-cover").files);
-        if ($("#edit-cover").files && $("#edit-cover").files[0]) {
-        }
+        let updatedStory = modelUpdateStory({
+            id: id,
+            title: $("#edit-title").val(),
+            description: $("#edit-description").val()
+        });
         
-        $("#edit-form").replaceWith(formatStoryButton(story));
+        let storyContainer = $(formatStoryButton(updatedStory)).insertBefore("#edit-form");
+        $("#edit-form").remove();
+
+        if (state.selectedStory && story.id == state.selectedStory.id)
+            $(storyContainer).addClass("selected-story");
     });
 
     $("#edit-cover").on('change', function() {
-        console.log(this);
         if (this.files && this.files[0]) {
             $('#cover-name').text(this.files[0].name);
             $(this).css('display', 'absolute');
@@ -273,6 +350,11 @@ function updateWordcount() {
     if ($("#sprint-timer").length && state.currentSprint && !state.currentSprint.finished) {
         let progress = wordcount - state.currentSprint.startWordcount;
         $("#sprint-timer-progress").text(progress);
+        if (state.currentSprint.goal) {
+            $("#sprint-timer-progress-bar").val(100 * progress / state.currentSprint.goal);
+            if (progress >= state.currentSprint.goal)
+                endSprint();
+        }
     }   
 }
 
@@ -285,9 +367,9 @@ function getWordcount() {
 
 function startSprint() {
     state.currentSprint = {};
-    state.currentSprint.duration = Math.floor($("#edit-sprint-duration").val()) * 60;
+    state.currentSprint.duration = Math.floor($("#edit-sprint-duration").val()) * 60 + 0.9;
     state.currentSprint.startTime = Date.now();
-    state.currentSprint.goal = $("#edit-sprint-goal").val();
+    state.currentSprint.goal = Math.floor($("#edit-sprint-goal").val());
     state.currentSprint.timerID = setInterval(updateSprint, 1000);
     state.currentSprint.finished = false;
     state.currentSprint.startWordcount = getWordcount();
@@ -308,9 +390,14 @@ function endSprint() {
 }
 
 function resetSprint() {
+    if (!state.currentSprint)
+        return
+
+    clearInterval(state.currentSprint.timerID);
     state.currentSprint = null;
     
-    loadSprintTab();
+    if ($("#sprint-timer").length)
+        loadSprintTab();
 }
 
 function updateSprint() {
@@ -330,13 +417,12 @@ function loadSprintTab() {
     $("#sidebar-content").empty();
     if (state.currentSprint && state.currentSprint.finished) {
         $("#sidebar-content").append(`
-            <div id="sprint-timer">
-                <p><span id="sprint-timer-minutes">0</span>m <span id="sprint-timer-seconds">0</span>s</p>
-                <p><span id="sprint-timer-progress">${state.currentSprint.finalWordcount}</span> words</p>
-                <p>All done!</p>
-                <div class="field">
+            <div id="sprint-timer" class="box has-text-centered has-background-primary has-text-white">
+                <p class="is-size-3 mb-3">All done!</h3>
+                <p class="mb-5"><span id="sprint-timer-progress">${state.currentSprint.finalWordcount}</span> words</p>
+                <p class="field">
                     <div class="control">
-                        <button class="button is-primary" id="reset-sprint">Reset</button>
+                        <button class="button is-white" id="reset-sprint">Reset</button>
                     </div>
                 </div>
             </div>
@@ -347,16 +433,42 @@ function loadSprintTab() {
         let minutes = secRemaining < 0 ? 0 : Math.floor(secRemaining / 60);
         let seconds = secRemaining < 0 ? 0 : Math.floor(secRemaining % 60);
         let wordcount = getWordcount() - state.currentSprint.startWordcount;
-        $("#sidebar-content").append(`
-            <div id="sprint-timer">
-                <p><span id="sprint-timer-minutes">${minutes}</span>m <span id="sprint-timer-seconds">${seconds}</span>s</p>
-                <p><span id="sprint-timer-progress">${wordcount}</span> words</p>
-            </div>
-        `);      
+        if (state.currentSprint.goal > 0) {
+            $("#sidebar-content").append(`
+                <div id="sprint-timer" class="box has-text-centered">
+                    <p class="mb-3"><span id="sprint-timer-minutes" class="is-size-3">${minutes}</span>m <span id="sprint-timer-seconds" class="is-size-3 ml-1">${seconds}</span>s</p>
+                    <p class="mb-5">
+                        <span id="sprint-timer-progress">${wordcount}</span> / ${state.currentSprint.goal} words 
+                        <progress id="sprint-timer-progress-bar" class="progress is-warning" value="0" max="100"></progress>
+                    </p>
+                    <p class="field">
+                        <div class="control">
+                            <button class="button is-primary" id="reset-sprint">Cancel</button>
+                        </div>
+                    </p>
+                </div>
+            `);     
+        }
+        else {
+            $("#sidebar-content").append(`
+                <div id="sprint-timer" class="box has-text-centered">
+                    <p class="mb-3"><span id="sprint-timer-minutes" class="is-size-3">${minutes}</span>m <span id="sprint-timer-seconds" class="is-size-3 ml-1">${seconds}</span>s</p>
+                    <p class="mb-5">
+                        <span id="sprint-timer-progress">${wordcount}</span> words 
+                    </p>
+                    <p class="field">
+                        <div class="control">
+                            <button class="button is-primary" id="reset-sprint">Cancel</button>
+                        </div>
+                    </p>
+                </div>
+            `);     
+
+        }
     }
     else {
         $("#sidebar-content").append(`
-            <div id="sprint-form">
+            <div id="sprint-form" class="box">
                 <div class="field">
                     <label class="label">Duration</label>
                     <div class="columns is-vcentered is-gapless">
@@ -391,6 +503,64 @@ function loadSprintTab() {
     }
 }
 
+async function generatePrompt() {
+    // there's so many things wrong with this function, but it works
+    // the random-word api was returning ridiculous obscure words
+    // so i made it repeatedly call random-word until it finds a word that's in the dictionary (or 5 seconds pass)
+    // then it returns the word + definition
+    // it's terrible
+
+    if ($("#prompt-container").length > 0) {
+        $("#prompt-text").text('...');
+        $("#prompt-definition").text('');
+        $("#prompt-attribution").text('');
+        $("#prompt-image").attr('src', '');
+
+        let unsplash, wordnik, dictionary, definition, word, image, attribution;
+
+        try {
+            wordnik = await $.get('http://api.wordnik.com/v4/words.json/randomWords?limit=10&api_key=85r46i2i5dukj9hk1dmy0ql9m9h9gfe93tnq9r1g84pk7u057');
+            
+            let found = false;
+            for (let data of wordnik) {
+                try {
+                    dictionary = await $.get(`https://api.dictionaryapi.dev/api/v2/entries/en/` + data.word);
+                    definition = dictionary[0].meanings[0].definitions[0].definition;
+                    word = dictionary[0].word;
+                } catch {
+                    continue;
+                }
+                found = true;
+                break;
+            }
+            if (!found)
+                $("#prompt-text").text('Couldn\'t retrieve prompt. Try again.');
+
+            unsplash = await $.get("https://api.unsplash.com/photos/random?client_id=Zd2AWcZrAxyxixZP5Q3ks-TVRlOIvN7A33ovU-wkmyc"); 
+            image = unsplash.urls.raw + '&w=300&h=200&fit=crop';
+            attribution = `Photo by <a href="https://unsplash.com/@${unsplash.user.username}?utm_source=weaver&utm_medium=referral">${unsplash.user.name}</a> on <a href="https://unsplash.com/?utm_source=weaver&utm_medium=referral">Unsplash</a>`
+        } 
+        
+        catch {
+            $("#prompt-text").text('Couldn\'t retrieve prompt. Try again.');
+            return;
+        }
+
+        $("#prompt-image").off('load').on('load', function() {
+            $("#prompt-text").text(word);
+            $("#prompt-definition").html(definition);
+            $("#prompt-attribution").html(attribution);
+        }).attr('src', image);
+
+        state.prompt = {
+            word: word,
+            definition: definition,
+            image: image,
+            attribution: attribution
+        }
+    }
+}
+
 $(document).ready(() => {
     setTab("stories");
     updateWordcount();
@@ -415,7 +585,7 @@ $(document).ready(() => {
         deleteStory(this);
     });
     
-    $("#sidebar-content").on("click", ".story-details", function() { 
+    $("#sidebar-content").on("click", "a.story-details", function() { 
         selectStory(this);
     });
     
@@ -427,6 +597,10 @@ $(document).ready(() => {
         resetSprint();
     });
     
+    $("#sidebar-content").on("click", "#generate-prompt", function() { 
+        generatePrompt();
+    });
+
     $("#delete-no").click(() => {
         $("#delete-confirm").css("visibility", "hidden");
         $("#delete-yes").unbind("click");

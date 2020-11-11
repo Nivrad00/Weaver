@@ -109,6 +109,23 @@ body {
 	color: black;
 }
 
-#sprint-form {
-	padding: 0px 10px;
+.story-details {
+	background-color: white;
+}
+
+.selected-story .story-details {
+	background-color: hsl(171, 100%, 41%);
+}
+
+.selected-story p, .selected-story .story-edit i {
+	color: white;
+}
+
+.fine-text {
+	color: #BBB;
+}
+
+.fine-text a {
+	color: #BBB;
+	text-decoration: underline;
 }
