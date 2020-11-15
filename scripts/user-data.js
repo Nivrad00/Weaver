@@ -1,21 +1,25 @@
-$(function()  {
+function saveStory(e) {
+    console.log("IN SAVE STORY")
+    e.preventDefault();
+    let id = $("#save-story").data('story-id');
+    let content = $('#editor').text();
+    console.log("saved: id " + id);
+    console.log("saved: content: " + content);
 
-    const saveStory = $('#save-story');
-
-    saveStory.on('click', (e) => {
-        e.preventDefault();
-        const story = $('#editor').text();
-        const title = $('#storyTitle').val();
-        //get the id of the current user
-        const userId = firebase.auth().currentUser.uid
-
-        //this is what adds the story to the database
-        //it points to the users directory under Weaver-Users, and 
-        firebase.database().ref('users/' + userId + "/stories/" + title).set(story).catch(error => {
-            console.log(error.message)
-        });
-
-        console.log("\"" + title + "\" saved successfully!")
+    //get the id of the current user
+    const userId = firebase.auth().currentUser.uid;
+    //save the story to the database under userId/stories/(id of the story)
+    firebase.database().ref('users/' + userId + "/stories/" + id + '/text').set(content).catch(error => {
+        console.log(error.message)
     })
+}
+
+$(document).ready(() => {
+    // const saveStory = $('#save-story');
+    console.log("INSIDE USERDATA>JS")
+
+    $('#save-story').on('click', function(event) {
+        saveStory(event);
+    });
 
 })

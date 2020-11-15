@@ -1,25 +1,5 @@
-/* placeholder "database" :) */
 
-var stories = [
-    {
-        id: 0,
-        image: "images/kbxing.png",
-        imageName: "kbxing.png",
-        title: "Killbot Crossing",
-        description: "A post-apocalyptic road trip novel. With robots!",
-        text: "robots ooo"
-    },
-    {
-        id: 1,
-        image: null,
-        imageName: null,
-        title: "Tales from Post-War Pyrrhia",
-        description: "A collection of short ficlets from Jade Mountain and beyond",
-        text: "dragons rerr"
-    }
-]
-
-var nextID = 2;
+var nextID = 0;
 
 const storyTemplate = {
     id: null,
@@ -34,40 +14,109 @@ function modelAddStory() {
         ...storyTemplate
     };
     story.id = nextID;
+
+    let imageUrl = ""
+    const userId = firebase.auth().currentUser.uid
+    var storageRef = firebase.storage().ref('bookIcon.png');
+
+    let newStory =  {
+        title: "Untitled " + nextID,
+        description: "(description goes here)",
+        text: "(story goes here)",
+        id: nextID
+    }
+    
+    firebase.database().ref('users/' + userId + "/stories/" + story.id).set(newStory).catch(error => {
+        console.log(error.message)
+    });
+
+    imageUrl = storageRef.getDownloadURL().then(function(url) {
+        // console.log("inside download url, now trying to update database");
+        //associates the image url under the user's info in the database
+        firebase.database().ref('users/' + userId + "/stories/" + (nextID-1) + "/image").set(url).catch(error => {
+            console.log(error.message)
+        });
+        newImage = true;
+      }).catch(function(error) {
+          console.log("ran into an error generating the image download url: ", error.message);
+      });
+
     nextID ++;
-    stories.push(story);
     return story;
 }
 
 function modelGetAllStories() {
+    let stories = [];
+    // need to wait for auth.js to finish logging in the user before retrieving stories from the database
+    if ($('#user').data ().status === undefined) {
+        setTimeout(modelGetAllStories, 300);
+    } else { 
+        const userId = firebase.auth().currentUser.uid;
+        firebase.database().ref('users/' + userId + "/stories/").on('value', function(snapshot) {
+            stories = snapshot.val()
+            return stories;
+
+        }, function (errorObject) {
+            console.log("The read failed: " + errorObject.code);
+        });
+    }
     return stories;
 }
 
 function modelGetStory(id) {
-    return stories.filter(s => s.id == id)[0];
+    let story = {};
+    const userId = firebase.auth().currentUser.uid
+    firebase.database().ref('users/' + userId + "/stories/" + id).on('value', function(snapshot) {
+        story = snapshot.val()
+
+    }, function (errorObject) {
+         console.log("The read failed: " + errorObject.code);
+    });
+
+    return story;
 }
 
 function modelDeleteStory(id) {
-    stories = stories.filter(s => s.id != id);
+
+    const userId = firebase.auth().currentUser.uid
+    firebase.database().ref('users/' + userId + "/stories/" + id).remove().catch(error => {
+        console.log(error.message)
+    });
+
 }
 
 function modelUpdateStory({id, title, description, content}) {
     if (id == undefined)
         return;
-    story = stories.filter(s => s.id == id)[0];
-    if (title)
+    story = {};
+
+    //get the id of the current user
+    const userId = firebase.auth().currentUser.uid
+
+    if (title != undefined) {
         story.title = title;
-    if (description)
+        firebase.database().ref('users/' + userId + "/stories/" + id + "/title").set(title).catch(error => {
+            console.log(error.message)
+        });
+    }
+    if (description != undefined) {
         story.description = description
-    if (content)
-        story.text = content;
+        firebase.database().ref('users/' + userId + "/stories/" + id + "/description").set(description).catch(error => {
+            console.log(error.message)
+    });
+
+    }
+
+    // if (content)
+    //     story.text = content;
+    //     console.log("idi: " + id)
+    //     console.log("content: " + content)
+    //     firebase.database().ref('users/' + userId + "/stories/" + id + "/text").set(content).catch(error => {
+    //         console.log(error.message)
+    //     });
+
     return story;
 }
-
-//end placeholder 
-
-
-
 
 var state = {
     currentSprint: null,
@@ -82,33 +131,33 @@ var state = {
 
 
 function formatStoryButton(data) {
-    if (!data.image) {
-        return `
-            <div class="story" data-story-id="${data.id}">
-                <div class="story-options">
-                    <a class="has-text-primary story-edit">
-                        <span class="icon">
-                            <i class="fas fa-edit"></i>
-                        </span>
-                    </a>
-                    <a class="has-text-danger story-delete">
-                        <span class="icon">
-                            <i class="fas fa-trash"></i>
-                        </span>
-                    </a>                         
-                </div>
-                <a class="box mb-4 story-details">
-                    <div class="media">
-                        <div class="media-content">
-                            <p class="title is-4">${data.title || "Untitled"}</p>
-                            <p class="subtitle is-6">${data.description}</p>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        `   
-    } 
-    else {
+    // if (!data.image) {
+    //     return `
+    //         <div class="story" data-story-id="${data.id}">
+    //             <div class="story-options">
+    //                 <a class="has-text-primary story-edit">
+    //                     <span class="icon">
+    //                         <i class="fas fa-edit"></i>
+    //                     </span>
+    //                 </a>
+    //                 <a class="has-text-danger story-delete">
+    //                     <span class="icon">
+    //                         <i class="fas fa-trash"></i>
+    //                     </span>
+    //                 </a>                         
+    //             </div>
+    //             <a class="box mb-4 story-details">
+    //                 <div class="media">
+    //                     <div class="media-content">
+    //                         <p class="title is-4">${data.title || "Untitled"}</p>
+    //                         <p class="subtitle is-6">${data.description}</p>
+    //                     </div>
+    //                 </div>
+    //             </a>
+    //         </div>
+    //     `   
+    // } 
+    // else {
         return `
             <div class="story" data-story-id="${data.id}">
                 <div class="story-options">
@@ -138,7 +187,7 @@ function formatStoryButton(data) {
                 </a>
             </div>
         `
-    }
+    // }
 }
 
 function formatEditForm(data) {
@@ -200,6 +249,30 @@ function addNewStory() {
     $("#add-story").before(formatStoryButton(story));
 }
 
+function populateStoryTab() {
+    //waits until the user is logged in before retrieving data from the database
+    if($('#user').data().status === undefined) {
+        setTimeout(populateStoryTab, 250);
+    } else {
+        let stories = modelGetAllStories()
+        if (stories != undefined) {
+            if (stories[0] === undefined) {
+                setTimeout(populateStoryTab, 250);
+            } else {
+                Object.entries(stories).forEach(item => {
+                    //the object is [id, (story object)]
+                    nextID++;
+                    let story = item[1];
+                    let storyContainer = $(formatStoryButton(story)).insertBefore('#add-story');
+                    if (state.selectedStory && story.id == state.selectedStory.id) {
+                        $(storyContainer).addClass("selected-story");
+                    }   
+                  })
+            }
+        }
+    }
+}
+
 function setTab(tab) {
     if (tab == "stories") {
         $("#sidebar-content").empty();
@@ -213,14 +286,11 @@ function setTab(tab) {
                 </button>
             </div>
         `);
-        for (let story of modelGetAllStories()) {
-            let storyContainer = $(formatStoryButton(story)).insertBefore('#add-story');
-            if (state.selectedStory && story.id == state.selectedStory.id) {
-                $(storyContainer).addClass("selected-story");
-            }           
-        }
+        //puts the story buttons on the sidebar
+        populateStoryTab();
     }
     if (tab == "sprints") {
+        
         loadSprintTab();
     }
     if (tab == "prompts") {
@@ -273,11 +343,12 @@ function deleteStory(deleteButton) {
 function selectStory(button) {
     let storyContainer = $(button).closest('.story');
     let id = $(storyContainer).data('story-id');
+    console.log("id of selected story: " + id)
     if (state.selectedStory && state.selectedStory.id == id)
         return;
-
     if ($(".selected-story").length) {
         let prevStoryContainer = $(".selected-story");
+        console.log(prevStoryContainer);
         $(prevStoryContainer).removeClass("selected-story");
         let prevId = $(prevStoryContainer).data('story-id');
         modelUpdateStory({
@@ -288,9 +359,13 @@ function selectStory(button) {
 
     $(storyContainer).addClass("selected-story");
     let story = modelGetStory(id);
-    $("#editor").html(story.text);
-    state.selectedStory = story;
-
+    if (story != undefined) {
+        $("#editor").html(story.text);
+        state.selectedStory = story;
+    } else {
+        $("#editor").html("");
+    }
+    $("#save-story").data('story-id', id);
     updateWordcount();
     resetSprint();
 }
@@ -300,6 +375,7 @@ function editStory(editButton) {
 
     let storyButton = $(editButton).closest('.story');
     let id = $(storyButton).data('story-id');
+    console.log("in edit button: " + id);
     let story = modelGetStory(id);
     storyButton.replaceWith(formatEditForm(story));
 
@@ -307,19 +383,8 @@ function editStory(editButton) {
         $("#edit-form").replaceWith(formatStoryButton(story));
     });
     
-    $("#edit-submit").click(() => {
-        let updatedStory = modelUpdateStory({
-            id: id,
-            title: $("#edit-title").val(),
-            description: $("#edit-description").val()
-        });
-        
-        let storyContainer = $(formatStoryButton(updatedStory)).insertBefore("#edit-form");
-        $("#edit-form").remove();
-
-        if (state.selectedStory && story.id == state.selectedStory.id)
-            $(storyContainer).addClass("selected-story");
-    });
+    let newImage = false;
+    let imageUrl = "";
 
     $("#edit-cover").on('change', function() {
         if (this.files && this.files[0]) {
@@ -331,7 +396,55 @@ function editStory(editButton) {
                 story.imageName = $('#cover-name').text();
             }
             reader.readAsDataURL(this.files[0]);
+            let file = this.files[0];
+            const userId = firebase.auth().currentUser.uid
+            var storageRef = firebase.storage().ref('users/'+userId+'/'+$('#cover-name').text());
+            //updates the user's images in the firebaseStorage with the new image
+            let imageUrl = storageRef.put(file).then(function(snapshot) {
+                // var storyImage = firebase.storage().refFromURL('gs://weaver-users.appspot.com/'+userId+'/'+$('#cover-name').text());
+                console.log("past the first storyImage, before attempting download url")
+                //creates the url used to display the image on the webpage
+                imageUrl = storageRef.getDownloadURL().then(function(url) {
+                    console.log("inside download url, now trying to update database");
+                    //associates the image url under the user's info in the database
+                    firebase.database().ref('users/' + userId + "/stories/" + id + "/image").set(url).catch(error => {
+                        console.log(error.message)
+                    });
+                    newImage = true;
+                  }).catch(function(error) {
+                      console.log("ran into an error generating the image download url: ", error.message);
+                  });
+            });
         }
+    });
+
+    $("#edit-submit").click(() => {
+        let submitStoryButton = $(editButton).closest('.story');
+        let submitId = $(submitStoryButton).data('story-id');
+        let updatedStory = modelUpdateStory({
+            id: submitId,
+            title: $("#edit-title").val(),
+            description: $("#edit-description").val(),
+        });
+        console.log("ID in edit form submit: "+submitId);
+        let newImageUrl = "url"
+        const userId = firebase.auth().currentUser.uid;
+        firebase.database().ref('users/' + userId + "/stories/" + id).on('value', function(snapshot) {
+            newImageUrl = snapshot.val().image
+        }, function (errorObject) {
+            console.log("The read failed: " + errorObject.code);
+        });
+
+        if (newImageUrl != "url") {
+            updatedStory.image = newImageUrl
+        }
+
+        
+        let storyContainer = $(formatStoryButton(updatedStory)).insertBefore("#edit-form");
+        $("#edit-form").remove();
+
+        if (state.selectedStory && story.id == state.selectedStory.id)
+            $(storyContainer).addClass("selected-story");
     });
 
     $("#remove-cover").click(function() {
@@ -342,6 +455,7 @@ function editStory(editButton) {
         story.imageName = null;
     });
 }
+
 
 function updateWordcount() {
     let wordcount = getWordcount();
@@ -355,7 +469,7 @@ function updateWordcount() {
             if (progress >= state.currentSprint.goal)
                 endSprint();
         }
-    }   
+    }
 }
 
 function getWordcount() {
