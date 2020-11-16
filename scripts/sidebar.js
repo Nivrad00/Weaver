@@ -23,7 +23,8 @@ function modelAddStory() {
         title: "Untitled " + nextID,
         description: "(description goes here)",
         text: "(story goes here)",
-        id: nextID
+        id: nextID,
+        isShared: false
     }
     
     firebase.database().ref('users/' + userId + "/stories/" + story.id).set(newStory).catch(error => {
@@ -31,7 +32,6 @@ function modelAddStory() {
     });
 
     imageUrl = storageRef.getDownloadURL().then(function(url) {
-        // console.log("inside download url, now trying to update database");
         //associates the image url under the user's info in the database
         firebase.database().ref('users/' + userId + "/stories/" + (nextID-1) + "/image").set(url).catch(error => {
             console.log(error.message)
@@ -89,7 +89,7 @@ function modelUpdateStory({id, title, description, content}) {
     if (id == undefined)
         return;
     story = {};
-
+    story.id = id
     //get the id of the current user
     const userId = firebase.auth().currentUser.uid
 
@@ -343,12 +343,11 @@ function deleteStory(deleteButton) {
 function selectStory(button) {
     let storyContainer = $(button).closest('.story');
     let id = $(storyContainer).data('story-id');
-    console.log("id of selected story: " + id)
+
     if (state.selectedStory && state.selectedStory.id == id)
         return;
     if ($(".selected-story").length) {
         let prevStoryContainer = $(".selected-story");
-        console.log(prevStoryContainer);
         $(prevStoryContainer).removeClass("selected-story");
         let prevId = $(prevStoryContainer).data('story-id');
         modelUpdateStory({
@@ -366,25 +365,24 @@ function selectStory(button) {
         $("#editor").html("");
     }
     $("#save-story").data('story-id', id);
+    $("#save-story").data('story-title', story.title)
+
     updateWordcount();
     resetSprint();
 }
 
 function editStory(editButton) {
-    $("#edit-cancel").click();
 
     let storyButton = $(editButton).closest('.story');
     let id = $(storyButton).data('story-id');
-    console.log("in edit button: " + id);
     let story = modelGetStory(id);
     storyButton.replaceWith(formatEditForm(story));
 
     $("#edit-cancel").click(() => {
-        $("#edit-form").replaceWith(formatStoryButton(story));
+        let originalStory = modelGetStory(id);
+        $("#edit-form").replaceWith(formatStoryButton(originalStory));
     });
     
-    let newImage = false;
-    let imageUrl = "";
 
     $("#edit-cover").on('change', function() {
         if (this.files && this.files[0]) {
@@ -401,16 +399,9 @@ function editStory(editButton) {
             var storageRef = firebase.storage().ref('users/'+userId+'/'+$('#cover-name').text());
             //updates the user's images in the firebaseStorage with the new image
             let imageUrl = storageRef.put(file).then(function(snapshot) {
-                // var storyImage = firebase.storage().refFromURL('gs://weaver-users.appspot.com/'+userId+'/'+$('#cover-name').text());
-                console.log("past the first storyImage, before attempting download url")
                 //creates the url used to display the image on the webpage
                 imageUrl = storageRef.getDownloadURL().then(function(url) {
-                    console.log("inside download url, now trying to update database");
-                    //associates the image url under the user's info in the database
-                    firebase.database().ref('users/' + userId + "/stories/" + id + "/image").set(url).catch(error => {
-                        console.log(error.message)
-                    });
-                    newImage = true;
+                    $('#edit-cover').data('imageUrl', url)
                   }).catch(function(error) {
                       console.log("ran into an error generating the image download url: ", error.message);
                   });
@@ -427,18 +418,30 @@ function editStory(editButton) {
             description: $("#edit-description").val(),
         });
         console.log("ID in edit form submit: "+submitId);
-        let newImageUrl = "url"
+        // let newImageUrl = "url"
+
         const userId = firebase.auth().currentUser.uid;
-        firebase.database().ref('users/' + userId + "/stories/" + id).on('value', function(snapshot) {
-            newImageUrl = snapshot.val().image
-        }, function (errorObject) {
-            console.log("The read failed: " + errorObject.code);
-        });
-
-        if (newImageUrl != "url") {
-            updatedStory.image = newImageUrl
+        let url = $('#edit-cover').data('imageUrl');
+        console.log("url in edit-form thing is: ", url)
+        if (url != undefined) {
+            //associates the image url under the user's info in the database
+            console.log("accidently got  in here");
+            firebase.database().ref('users/' + userId + "/stories/" + id + "/image").set(url).catch(error => {
+                console.log(error.message)
+            });
+        } else {
+            firebase.database().ref('users/' + userId + "/stories/" + id).on('value', function(snapshot) {
+                url = snapshot.val().image;
+                // return stories;
+    
+            }, function (errorObject) {
+                console.log("The read failed: " + errorObject.code);
+            });
         }
-
+        updatedStory.image = url;
+        // if (newImageUrl != "url") {
+        //     updatedStory.image = newImageUrl
+        // }
         
         let storyContainer = $(formatStoryButton(updatedStory)).insertBefore("#edit-form");
         $("#edit-form").remove();
@@ -630,56 +633,39 @@ async function generatePrompt() {
         $("#prompt-attribution").text('');
         $("#prompt-image").attr('src', '');
 
-        let unsplash, dictionary, word, definition, image, attribution;
-        let timeout = false;
-        setTimeout(() => timeout = true, 5000);
+        let unsplash, wordnik, dictionary, definition, word, image, attribution;
 
-        while (!timeout) {
-            try {
-                word = await $.get('https://random-word.ryanrk.com/api/en/word/random');
-            } catch {
-                $("#prompt-text").text('Error retrieving word.');
-                return;
-            }
+        try {
+            wordnik = await $.get('http://api.wordnik.com/v4/words.json/randomWords?limit=10&api_key=85r46i2i5dukj9hk1dmy0ql9m9h9gfe93tnq9r1g84pk7u057');
             
-            try {
-                dictionary = await $.get('https://api.dictionaryapi.dev/api/v2/entries/en/' + word);
-            } catch (e) {
-                if (e.responseJSON.title == 'No Definitions Found')
+            let found = false;
+            for (let data of wordnik) {
+                try {
+                    dictionary = await $.get(`https://api.dictionaryapi.dev/api/v2/entries/en/` + data.word);
+                    definition = dictionary[0].meanings[0].definitions[0].definition;
+                    word = dictionary[0].word;
+                } catch {
                     continue;
-                else {
-                    $("#prompt-text").text('Error retrieving definition.');
-                    return;
                 }
+                found = true;
+                break;
             }
+            if (!found)
+                $("#prompt-text").text('Couldn\'t retrieve prompt. Try again.');
 
-            try {
-                definition = dictionary[0].meanings[0].definitions[0].definition;
-            } catch {
-                continue;
-            }
-            
-            try {
-                unsplash = await $.get("https://api.unsplash.com/photos/random?client_id=Zd2AWcZrAxyxixZP5Q3ks-TVRlOIvN7A33ovU-wkmyc"); 
-            } catch {
-                $("#prompt-text").text('Error retrieving image.');
-                return;
-            }
-
-            break;
-        }
-
-        if (timeout) {
-            $("#prompt-text").text('Process timed out.');
+            unsplash = await $.get("https://api.unsplash.com/photos/random?client_id=Zd2AWcZrAxyxixZP5Q3ks-TVRlOIvN7A33ovU-wkmyc"); 
+            image = unsplash.urls.raw + '&w=300&h=200&fit=crop';
+            attribution = `Photo by <a href="https://unsplash.com/@${unsplash.user.username}?utm_source=weaver&utm_medium=referral">${unsplash.user.name}</a> on <a href="https://unsplash.com/?utm_source=weaver&utm_medium=referral">Unsplash</a>`
+        } 
+        
+        catch {
+            $("#prompt-text").text('Couldn\'t retrieve prompt. Try again.');
             return;
         }
-            
-        image = unsplash.urls.raw + '&w=300&h=200&fit=crop';
-        attribution = `Photo by <a href="https://unsplash.com/@${unsplash.user.username}?utm_source=weaver&utm_medium=referral">${unsplash.user.name}</a> on <a href="https://unsplash.com/?utm_source=weaver&utm_medium=referral">Unsplash</a>`
-        
+
         $("#prompt-image").off('load').on('load', function() {
             $("#prompt-text").text(word);
-            $("#prompt-definition").text(definition);
+            $("#prompt-definition").html(definition);
             $("#prompt-attribution").html(attribution);
         }).attr('src', image);
 

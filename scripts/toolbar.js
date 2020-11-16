@@ -13,3 +13,4 @@ function setUrl() {
     document.execCommand('insertHTML', false, '<a href="' + url + '" target="_blank">' + sText + '</a>');
     document.getElementById('txtFormatUrl').value = '';
 }
+

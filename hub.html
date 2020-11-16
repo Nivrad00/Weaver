@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weaver</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+    <link rel="stylesheet" href="stylesheets/style.css" />
+    <link rel="stylesheet" href="stylesheets/hub.css" />
+
+    <script src="scripts/jquery-3.5.1.min.js"></script>
+    <script src="https://kit.fontawesome.com/e690d06293.js" crossorigin="anonymous"></script>
+
+</head>
+
+<body>
+
+    <nav class="navbar has-shadow" role="navigation">
+        <div class="container">
+            <div class="navbar-brand">
+                <a class="navbar-item" href="/" style="margin-left: 20px">
+                    <img id="Logo" src="images/weaver.png" width="140" height="60">
+                </a>
+            </div>
+            <div class="navbar-end">
+                <div class="navbar-item">
+                    <span id="user" class="has-text-weight-bold"></span>
+                </div>
+                <div class="navbar-item">
+                    <a href="/home.html">
+                        <button id="MyStories" class="button is-primary">
+                            <span>My Stories</span>
+                        </button>
+                    </a>
+                </div>
+                <div class="navbar-item">
+                    <button id="Logout" class="button is-primary">
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero is-primary">
+        <div class="hero-body has-text-centered">
+            <div class="container">
+              <h1 class="title">
+                The Hub
+              </h1>
+              <h2 class="subtitle is-italic">
+                Let Your Story be Heard 
+              </h2>
+            </div>
+          </div>
+    </section>
+
+    <section class="section">
+        <div id="hubStories">
+
+        </div>
+    </section>
+
+    <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-firestore.js"></script>
+
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/hub.js"></script>
+    
+
+</body>
+
+</html>

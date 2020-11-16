@@ -122,10 +122,10 @@ body {
 }
 
 .fine-text {
-	color: lightgrey;
+	color: #BBB;
 }
 
 .fine-text a {
-	color: lightgrey;
+	color: #BBB;
 	text-decoration: underline;
 }
