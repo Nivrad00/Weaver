@@ -1,15 +1,9 @@
 /* placeholder "database" :) */
 
-var nextID = 0;
+var nextID = 1;
 var stories = [];
 
-$(function() {
-    sidebarSetup();
-})
-
-const sidebarSetup = function() {
-    loadStories();
-}
+const sleep = m => new Promise(r => setTimeout(r, m))
 
 const storyTemplate = {
     id: null,
@@ -32,18 +26,23 @@ function modelAddStory() {
     let newStory =  {
         title: "Untitled " + nextID,
         description: "(description goes here)",
-        text: "(story goes here)",
+        content: null,
         id: nextID,
         isShared: false
     }
     
-    firebase.database().ref('users/' + userId + "/stories/" + story.id).set(newStory).catch(error => {
+    firebase.database().ref('users/' + userId + "/stories/" + newStory.id).set(newStory).catch(error => {
+        console.log(error.message)
+    });
+    nextID ++;
+
+    firebase.database().ref('users/' + userId + "/nextID/").set(nextID).catch(error => {
         console.log(error.message)
     });
 
     imageUrl = storageRef.getDownloadURL().then(function(url) {
         //associates the image url under the user's info in the database
-        firebase.database().ref('users/' + userId + "/stories/" + (nextID-1) + "/image").set(url).catch(error => {
+        firebase.database().ref('users/' + userId + "/stories/" + (nextID-2) + "/image").set(url).catch(error => {
             console.log(error.message)
         });
         newImage = true;
@@ -51,29 +50,7 @@ function modelAddStory() {
           console.log("ran into an error generating the image download url: ", error.message);
       });
 
-    nextID ++;
     return story;
-}
-
-async function loadStories() {
-    const userId = firebase.auth().currentUser.uid;
-    const data = await firebase.database().ref('users/' + userId + '/stories').once('value').then(function(storySnapshot) {
-        var snapshot = storySnapshot.val()
-
-        for (const [key, value] of Object.entries(snapshot)) {
-            let story = {
-                ...storyTemplate
-            }
-            story.id = key;
-            story.description = value.description;
-            story.image = value.image;
-            story.content = value.content;
-            story.title = value.title;
-
-            stories.push(story);
-            
-        }
-    })
 }
 
 function modelGetStory(id) {
@@ -121,10 +98,10 @@ function modelUpdateStory({id, title, description, content}) {
     }
 
     // if (content)
-    //     story.text = content;
+    //     story.content = content;
     //     console.log("idi: " + id)
     //     console.log("content: " + content)
-    //     firebase.database().ref('users/' + userId + "/stories/" + id + "/text").set(content).catch(error => {
+    //     firebase.database().ref('users/' + userId + "/stories/" + id + "/content").set(content).catch(error => {
     //         console.log(error.message)
     //     });
 
@@ -144,33 +121,32 @@ var state = {
 
 
 function formatStoryButton(data) {
-    // if (!data.image) {
-    //     return `
-    //         <div class="story" data-story-id="${data.id}">
-    //             <div class="story-options">
-    //                 <a class="has-text-primary story-edit">
-    //                     <span class="icon">
-    //                         <i class="fas fa-edit"></i>
-    //                     </span>
-    //                 </a>
-    //                 <a class="has-text-danger story-delete">
-    //                     <span class="icon">
-    //                         <i class="fas fa-trash"></i>
-    //                     </span>
-    //                 </a>                         
-    //             </div>
-    //             <a class="box mb-4 story-details">
-    //                 <div class="media">
-    //                     <div class="media-content">
-    //                         <p class="title is-4">${data.title || "Untitled"}</p>
-    //                         <p class="subtitle is-6">${data.description}</p>
-    //                     </div>
-    //                 </div>
-    //             </a>
-    //         </div>
-    //     `   
-    // } 
-    // else {
+    if (!data.image) {
+        return `
+            <div class="story" data-story-id="${data.id}">
+                <div class="story-options">
+                    <a class="has-text-primary story-edit">
+                        <span class="icon">
+                            <i class="fas fa-edit"></i>
+                        </span>
+                    </a>
+                    <a class="has-text-danger story-delete">
+                        <span class="icon">
+                            <i class="fas fa-trash"></i>
+                        </span>
+                    </a>                         
+                </div>
+                <a class="box mb-4 story-details">
+                    <div class="media">
+                        <div class="media-content">
+                            <p class="title is-4">${data.title || "Untitled"}</p>
+                            <p class="subtitle is-6">${data.description}</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        `   
+    } else {
         return `
             <div class="story" data-story-id="${data.id}">
                 <div class="story-options">
@@ -200,7 +176,7 @@ function formatStoryButton(data) {
                 </a>
             </div>
         `
-    // }
+     }
 }
 
 function formatEditForm(data) {
@@ -262,28 +238,43 @@ function addNewStory() {
     $("#add-story").before(formatStoryButton(story));
 }
 
-function populateStoryTab() {
+async function populateStoryTab() {
     //waits until the user is logged in before retrieving data from the database
     if($('#user').data().status === undefined) {
         setTimeout(populateStoryTab, 250);
     } else {
-        let stories = modelGetAllStories()
-        if (stories != undefined) {
-            if (stories[0] === undefined) {
-                setTimeout(populateStoryTab, 250);
-            } else {
-                Object.entries(stories).forEach(item => {
-                    //the object is [id, (story object)]
+        const userId = firebase.auth().currentUser.uid;
+        const data = await firebase.database().ref('users/' + userId + '/stories').once('value').then(function(storySnapshot) {
+            var snapshot = storySnapshot.val()
+
+            if (!(snapshot == null) && !(snapshot == undefined)) {
+                for (const [key, value] of Object.entries(snapshot)) {
+                    let story = {
+                        ...storyTemplate
+                    }
+                    story.id = key;
+                    story.description = value.description;
+                    story.image = value.image;
+                    story.content = value.content;
+                    story.title = value.title;
+        
+                    stories.push(story);
                     nextID++;
-                    let story = item[1];
                     let storyContainer = $(formatStoryButton(story)).insertBefore('#add-story');
                     if (state.selectedStory && story.id == state.selectedStory.id) {
                         $(storyContainer).addClass("selected-story");
-                    }   
-                  })
+                    }  
+                    
+                }
             }
-        }
+        })
     }
+}
+
+function updateStoryTab(id, title, description) {
+    console.log(id);
+    $(`.story[story-id="${id}"]`).find(".title").text(title);
+    $(`.story[story-id="${id}"]`).find(".subtitle").text(description);
 }
 
 function setTab(tab) {
@@ -365,17 +356,17 @@ function selectStory(button) {
         let prevId = $(prevStoryContainer).data('story-id');
         modelUpdateStory({
             id: prevId,
-            content: $("#editor").html()
+            content: editor.getContents()
         });
     }
 
     $(storyContainer).addClass("selected-story");
     let story = modelGetStory(id);
     if (story != undefined) {
-        $("#editor").html(story.text);
+        editor.setContents(story.content);
         state.selectedStory = story;
     } else {
-        $("#editor").html("");
+        editor.setText("");
     }
     $("#save-story").data('story-id', id);
     $("#save-story").data('story-title', story.title)

@@ -27,6 +27,13 @@ body {
 	max-height: 3.5rem;
 }
 
+.navbar-burger {
+	height: 56px;
+    width: 56px;
+    justify-self: center;
+	align-self: center;
+}
+
 .story {
 	position: relative;
 }
