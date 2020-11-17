@@ -1,32 +1,22 @@
 /* placeholder "database" :) */
 
-var stories = [
-    {
-        id: 0,
-        image: "images/kbxing.png",
-        imageName: "kbxing.png",
-        title: "Killbot Crossing",
-        description: "A post-apocalyptic road trip novel. With robots!",
-        text: "robots ooo"
-    },
-    {
-        id: 1,
-        image: null,
-        imageName: null,
-        title: "Tales from Post-War Pyrrhia",
-        description: "A collection of short ficlets from Jade Mountain and beyond",
-        text: "dragons rerr"
-    }
-]
+var nextID = 0;
+var stories = [];
 
-var nextID = 2;
+$(function() {
+    sidebarSetup();
+})
+
+const sidebarSetup = function() {
+    loadStories();
+}
 
 const storyTemplate = {
     id: null,
     image: null,
     title: "",
     description: "",
-    text: "",
+    content: null,
 }
 
 function modelAddStory() {
@@ -39,8 +29,25 @@ function modelAddStory() {
     return story;
 }
 
-function modelGetAllStories() {
-    return stories;
+async function loadStories() {
+    const userId = firebase.auth().currentUser.uid;
+    const data = await firebase.database().ref('users/' + userId + '/stories').once('value').then(function(storySnapshot) {
+        var snapshot = storySnapshot.val()
+
+        for (const [key, value] of Object.entries(snapshot)) {
+            let story = {
+                ...storyTemplate
+            }
+            story.id = key;
+            story.description = value.description;
+            story.image = value.image;
+            story.content = value.content;
+            story.title = value.title;
+
+            stories.push(story);
+            
+        }
+    })
 }
 
 function modelGetStory(id) {

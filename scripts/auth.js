@@ -105,6 +105,8 @@ $(function () {
         })
     })
 
+    const sleep = m => new Promise(r => setTimeout(r, m))
+
     // Get a database reference to our blog
 
 

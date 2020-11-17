@@ -1,12 +1,14 @@
 .editor {
     border: solid 1px #ccc;
     padding: 20px;
-    min-height: 80%;
+    height: 75%;
     background-color: white;
     border-bottom-left-radius: 3px;
     border-bottom-right-radius: 3px;
     margin-left: 1rem;
     margin-right: 1rem;
+    overflow-y: scroll;
+    overflow-x: hidden;
 }
 
 .buttonbar {
@@ -20,7 +22,7 @@
     margin: auto;
 }
 
-.toolbar {
+.ql-toolbar {
     border-top: solid 1px #ccc;
     border-left: solid 1px #ccc;
     border-right: solid 1px #ccc;
@@ -31,16 +33,4 @@
     margin-left: 1rem;
     margin-right: 1rem;
     margin-top: 10px;
-}
-
-.toolbar .span {
-    cursor:pointer;
-}
-
-.toolbar a {
-    color: black;
-}
-
-.toolbar a:hover {
-    color: #05d1b2;
 }

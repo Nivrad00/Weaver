@@ -129,3 +129,7 @@ body {
 	color: #BBB;
 	text-decoration: underline;
 }
+
+.buttons a {
+	margin-right: .5rem;
+}

@@ -4,7 +4,7 @@ $(function()  {
 
     saveStory.on('click', (e) => {
         e.preventDefault();
-        const story = $('#editor').text();
+        const storyDelta = editor.getContents();
         const title = $('#storyTitle').val();
 
         //get the id of the current user
