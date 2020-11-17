@@ -15,7 +15,8 @@ const getStories = async function() {
             if (!(userStories == undefined) && !(userStories == null)) {
                 for (const [key, value] of Object.entries(userStories)) {
                     if (value.isShared) {
-                        stories.push([key, value.body]);
+                        //key is the id of the story.  Each story id has values: title, description, text, image, isShared, id
+                        stories.push([key, value.title, value.text]);
                     }
                 }
             }
@@ -27,8 +28,9 @@ const getStories = async function() {
 }
 
 const createStoryCard = function(story) {
-    let title = story[0];
-    let body = story[1];
+    //story id is story[0]
+    let title = story[1];
+    let body = story[2];
 
     console.log(title, body);
 

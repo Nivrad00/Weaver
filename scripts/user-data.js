@@ -1,11 +1,65 @@
-$(function()  {
+function saveHelper(e) {
+    e.preventDefault();
+    let id = $("#save-story").data('story-id');
+    let content = $('#editor').text();
+
+    const userId = firebase.auth().currentUser.uid;
+
+    if (id === undefined) {
+        //if no story is selected... need to handle this case?
+        console.log("no story selected")
+    } else {
+        //save the story to the database under userId/stories/(id of the story)
+        firebase.database().ref('users/' + userId + "/stories/" + id + '/text').set(content).catch(error => {
+            console.log(error.message)
+        })
+    }
+}
+
+function shareHelper(e) {
+    e.preventDefault();
+    let id = $("#save-story").data('story-id');
+    const userId = firebase.auth().currentUser.uid;
+
+    if (id === undefined) {
+        //if no story is selected... need to handle this case?
+        console.log("no story selected")
+    } else {
+        firebase.database().ref('users/' + userId + "/stories/" + id + "/isShared").set(true).catch(error => {
+            console.log(error.message)
+        });
+    }
+}
+
+$(function() {
 
     const saveStory = $('#save-story');
 
-    saveStory.on('click', (e) => {
+    saveStory.on('click', saveHelper);
+
+    const shareStory = $('#share-story');
+
+    shareStory.on('click', shareHelper);
+
+    //------------------------------ Code from the pull ------------------------------------
+    //----------------------------------------V---------------------------------------------
+    
+    //Incompatible with the database structure/how story data is stored.  The code above has the same functionality (save and share),
+    //but I did not want to delete this code below in case it might still be needed -Catherine
+
+    //temp
+    const saveOther = $('#otherSave');
+
+    //uncalled
+    saveOther.on('click', (e) => {
         e.preventDefault();
+<<<<<<< HEAD
         const storyDelta = editor.getContents();
         const title = $('#storyTitle').val();
+=======
+        let story = $('#editor').text();
+        let title = $('#storyTitle').val();
+>>>>>>> c9bf3ab324f4268e940bb43d3618f5822d2f08a6
 
         //get the id of the current user
         const userId = firebase.auth().currentUser.uid;
@@ -45,9 +99,12 @@ $(function()  {
         }
     })
 
-    const shareStory = $('#share-story');
 
-    shareStory.on('click', (e) => {
+    //temp
+    const shareStoryOther = $('#otherShare')
+
+    //uncalled
+    shareStoryOther.on('click', (e) => {
         e.preventDefault();
         const story = $('#editor').text();
         let title = $('#storyTitle').val();
@@ -92,4 +149,6 @@ $(function()  {
         }
     })
 
+// }
 })
+ 
