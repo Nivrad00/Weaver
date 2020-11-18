@@ -66,9 +66,6 @@ function modelUpdateStory({id, title, description, content}) {
 
 //end placeholder 
 
-
-
-
 var state = {
     currentSprint: null,
     selectedStory: null,
@@ -367,14 +364,27 @@ function getWordcount() {
 
 function startSprint() {
     state.currentSprint = {};
-    state.currentSprint.duration = Math.floor($("#edit-sprint-duration").val()) * 60 + 0.9;
-    state.currentSprint.startTime = Date.now();
-    state.currentSprint.goal = Math.floor($("#edit-sprint-goal").val());
     state.currentSprint.timerID = setInterval(updateSprint, 1000);
-    state.currentSprint.finished = false;
+    state.currentSprint.duration = Math.floor($("#edit-sprint-duration").val()) * 60 + 0.9;
+    state.currentSprint.goal = Math.floor($("#edit-sprint-goal").val());
+    state.currentSprint.startTime = Date.now();
     state.currentSprint.startWordcount = getWordcount();
+    state.currentSprint.finished = false;
 
     loadSprintTab();
+}
+
+function updateSprint() {
+    if (!state.currentSprint)
+        return
+
+    let secRemaining = state.currentSprint.duration - (Date.now() - state.currentSprint.startTime) / 1000;
+    if ($("#sprint-timer").length) {
+        $("#sprint-timer-minutes").text(secRemaining < 0 ? 0 : Math.floor(secRemaining / 60));
+        $("#sprint-timer-seconds").text(secRemaining < 0 ? 0 : Math.floor(secRemaining % 60));
+    }
+    if (secRemaining <= 0)
+        endSprint();
 }
 
 function endSprint() {
@@ -398,19 +408,6 @@ function resetSprint() {
     
     if ($("#sprint-timer").length)
         loadSprintTab();
-}
-
-function updateSprint() {
-    if (!state.currentSprint)
-        return
-
-    let secRemaining = state.currentSprint.duration - (Date.now() - state.currentSprint.startTime) / 1000;
-    if ($("#sprint-timer").length) {
-        $("#sprint-timer-minutes").text(secRemaining < 0 ? 0 : Math.floor(secRemaining / 60));
-        $("#sprint-timer-seconds").text(secRemaining < 0 ? 0 : Math.floor(secRemaining % 60));
-    }
-    if (secRemaining <= 0)
-        endSprint();
 }
 
 function loadSprintTab() {
@@ -504,12 +501,6 @@ function loadSprintTab() {
 }
 
 async function generatePrompt() {
-    // there's so many things wrong with this function, but it works
-    // the random-word api was returning ridiculous obscure words
-    // so i made it repeatedly call random-word until it finds a word that's in the dictionary (or 5 seconds pass)
-    // then it returns the word + definition
-    // it's terrible
-
     if ($("#prompt-container").length > 0) {
         $("#prompt-text").text('...');
         $("#prompt-definition").text('');
