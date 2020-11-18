@@ -6,6 +6,7 @@ $(function () {
         apiKey: "AIzaSyA55m9t04M6qN6bx5rZ63Swmq-j_WJkyns",
         authDomain: "weaver-users.firebaseapp.com",
         databaseURL: "https://weaver-users.firebaseio.com",
+        storageBucket: "gs://weaver-users.appspot.com",
         projectId: "weaver-users"
     };
     // Initialize Firebase
@@ -13,6 +14,7 @@ $(function () {
 
     const auth = firebase.auth();
     var data = firebase.database();
+    // var storage = firebase.storage();
 
     //acess the user database
     // const database = firebase.database();
@@ -33,6 +35,7 @@ $(function () {
             console.log('User logged in');
             //set user info in home page after log in
             $('#user').text(user.email);
+            $('#user').data("status", "ready");
         }
     })
 

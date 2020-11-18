@@ -1,32 +1,16 @@
 /* placeholder "database" :) */
 
-var stories = [
-    {
-        id: 0,
-        image: "images/kbxing.png",
-        imageName: "kbxing.png",
-        title: "Killbot Crossing",
-        description: "A post-apocalyptic road trip novel. With robots!",
-        text: "robots ooo"
-    },
-    {
-        id: 1,
-        image: null,
-        imageName: null,
-        title: "Tales from Post-War Pyrrhia",
-        description: "A collection of short ficlets from Jade Mountain and beyond",
-        text: "dragons rerr"
-    }
-]
+var nextID = 1;
+var stories = [];
 
-var nextID = 2;
+const sleep = m => new Promise(r => setTimeout(r, m))
 
 const storyTemplate = {
     id: null,
     image: null,
     title: "",
     description: "",
-    text: "",
+    content: null,
 }
 
 function modelAddStory() {
@@ -34,37 +18,95 @@ function modelAddStory() {
         ...storyTemplate
     };
     story.id = nextID;
+
+    let imageUrl = ""
+    const userId = firebase.auth().currentUser.uid
+    var storageRef = firebase.storage().ref('bookIcon.png');
+
+    let newStory =  {
+        title: "Untitled " + nextID,
+        description: "(description goes here)",
+        content: null,
+        id: nextID,
+        isShared: false
+    }
+    
+    firebase.database().ref('users/' + userId + "/stories/" + newStory.id).set(newStory).catch(error => {
+        console.log(error.message)
+    });
     nextID ++;
-    stories.push(story);
+
+    firebase.database().ref('users/' + userId + "/nextID/").set(nextID).catch(error => {
+        console.log(error.message)
+    });
+
+    imageUrl = storageRef.getDownloadURL().then(function(url) {
+        //associates the image url under the user's info in the database
+        firebase.database().ref('users/' + userId + "/stories/" + (nextID-2) + "/image").set(url).catch(error => {
+            console.log(error.message)
+        });
+        newImage = true;
+      }).catch(function(error) {
+          console.log("ran into an error generating the image download url: ", error.message);
+      });
+
     return story;
 }
 
-function modelGetAllStories() {
-    return stories;
-}
-
 function modelGetStory(id) {
-    return stories.filter(s => s.id == id)[0];
+    let story = {};
+    const userId = firebase.auth().currentUser.uid
+    firebase.database().ref('users/' + userId + "/stories/" + id).on('value', function(snapshot) {
+        story = snapshot.val()
+
+    }, function (errorObject) {
+         console.log("The read failed: " + errorObject.code);
+    });
+
+    return story;
 }
 
 function modelDeleteStory(id) {
-    stories = stories.filter(s => s.id != id);
+
+    const userId = firebase.auth().currentUser.uid
+    firebase.database().ref('users/' + userId + "/stories/" + id).remove().catch(error => {
+        console.log(error.message)
+    });
+
 }
 
 function modelUpdateStory({id, title, description, content}) {
     if (id == undefined)
         return;
-    story = stories.filter(s => s.id == id)[0];
-    if (title)
+    story = {};
+    story.id = id
+    //get the id of the current user
+    const userId = firebase.auth().currentUser.uid
+
+    if (title != undefined) {
         story.title = title;
-    if (description)
+        firebase.database().ref('users/' + userId + "/stories/" + id + "/title").set(title).catch(error => {
+            console.log(error.message)
+        });
+    }
+    if (description != undefined) {
         story.description = description
-    if (content)
-        story.text = content;
+        firebase.database().ref('users/' + userId + "/stories/" + id + "/description").set(description).catch(error => {
+            console.log(error.message)
+    });
+
+    }
+
+    // if (content)
+    //     story.content = content;
+    //     console.log("idi: " + id)
+    //     console.log("content: " + content)
+    //     firebase.database().ref('users/' + userId + "/stories/" + id + "/content").set(content).catch(error => {
+    //         console.log(error.message)
+    //     });
+
     return story;
 }
-
-//end placeholder 
 
 var state = {
     currentSprint: null,
@@ -104,8 +146,7 @@ function formatStoryButton(data) {
                 </a>
             </div>
         `   
-    } 
-    else {
+    } else {
         return `
             <div class="story" data-story-id="${data.id}">
                 <div class="story-options">
@@ -135,7 +176,7 @@ function formatStoryButton(data) {
                 </a>
             </div>
         `
-    }
+     }
 }
 
 function formatEditForm(data) {
@@ -197,6 +238,45 @@ function addNewStory() {
     $("#add-story").before(formatStoryButton(story));
 }
 
+async function populateStoryTab() {
+    //waits until the user is logged in before retrieving data from the database
+    if($('#user').data().status === undefined) {
+        setTimeout(populateStoryTab, 250);
+    } else {
+        const userId = firebase.auth().currentUser.uid;
+        const data = await firebase.database().ref('users/' + userId + '/stories').once('value').then(function(storySnapshot) {
+            var snapshot = storySnapshot.val()
+
+            if (!(snapshot == null) && !(snapshot == undefined)) {
+                for (const [key, value] of Object.entries(snapshot)) {
+                    let story = {
+                        ...storyTemplate
+                    }
+                    story.id = key;
+                    story.description = value.description;
+                    story.image = value.image;
+                    story.content = value.content;
+                    story.title = value.title;
+        
+                    stories.push(story);
+                    nextID++;
+                    let storyContainer = $(formatStoryButton(story)).insertBefore('#add-story');
+                    if (state.selectedStory && story.id == state.selectedStory.id) {
+                        $(storyContainer).addClass("selected-story");
+                    }  
+                    
+                }
+            }
+        })
+    }
+}
+
+function updateStoryTab(id, title, description) {
+    console.log(id);
+    $(`.story[story-id="${id}"]`).find(".title").text(title);
+    $(`.story[story-id="${id}"]`).find(".subtitle").text(description);
+}
+
 function setTab(tab) {
     if (tab == "stories") {
         $("#sidebar-content").empty();
@@ -210,14 +290,11 @@ function setTab(tab) {
                 </button>
             </div>
         `);
-        for (let story of modelGetAllStories()) {
-            let storyContainer = $(formatStoryButton(story)).insertBefore('#add-story');
-            if (state.selectedStory && story.id == state.selectedStory.id) {
-                $(storyContainer).addClass("selected-story");
-            }           
-        }
+        //puts the story buttons on the sidebar
+        populateStoryTab();
     }
     if (tab == "sprints") {
+        
         loadSprintTab();
     }
     if (tab == "prompts") {
@@ -270,30 +347,35 @@ function deleteStory(deleteButton) {
 function selectStory(button) {
     let storyContainer = $(button).closest('.story');
     let id = $(storyContainer).data('story-id');
+
     if (state.selectedStory && state.selectedStory.id == id)
         return;
-
     if ($(".selected-story").length) {
         let prevStoryContainer = $(".selected-story");
         $(prevStoryContainer).removeClass("selected-story");
         let prevId = $(prevStoryContainer).data('story-id');
         modelUpdateStory({
             id: prevId,
-            content: $("#editor").html()
+            content: editor.getContents()
         });
     }
 
     $(storyContainer).addClass("selected-story");
     let story = modelGetStory(id);
-    $("#editor").html(story.text);
-    state.selectedStory = story;
+    if (story != undefined) {
+        editor.setContents(story.content);
+        state.selectedStory = story;
+    } else {
+        editor.setText("");
+    }
+    $("#save-story").data('story-id', id);
+    $("#save-story").data('story-title', story.title)
 
     updateWordcount();
     resetSprint();
 }
 
 function editStory(editButton) {
-    $("#edit-cancel").click();
 
     let storyButton = $(editButton).closest('.story');
     let id = $(storyButton).data('story-id');
@@ -301,22 +383,10 @@ function editStory(editButton) {
     storyButton.replaceWith(formatEditForm(story));
 
     $("#edit-cancel").click(() => {
-        $("#edit-form").replaceWith(formatStoryButton(story));
+        let originalStory = modelGetStory(id);
+        $("#edit-form").replaceWith(formatStoryButton(originalStory));
     });
     
-    $("#edit-submit").click(() => {
-        let updatedStory = modelUpdateStory({
-            id: id,
-            title: $("#edit-title").val(),
-            description: $("#edit-description").val()
-        });
-        
-        let storyContainer = $(formatStoryButton(updatedStory)).insertBefore("#edit-form");
-        $("#edit-form").remove();
-
-        if (state.selectedStory && story.id == state.selectedStory.id)
-            $(storyContainer).addClass("selected-story");
-    });
 
     $("#edit-cover").on('change', function() {
         if (this.files && this.files[0]) {
@@ -328,7 +398,60 @@ function editStory(editButton) {
                 story.imageName = $('#cover-name').text();
             }
             reader.readAsDataURL(this.files[0]);
+            let file = this.files[0];
+            const userId = firebase.auth().currentUser.uid
+            var storageRef = firebase.storage().ref('users/'+userId+'/'+$('#cover-name').text());
+            //updates the user's images in the firebaseStorage with the new image
+            let imageUrl = storageRef.put(file).then(function(snapshot) {
+                //creates the url used to display the image on the webpage
+                imageUrl = storageRef.getDownloadURL().then(function(url) {
+                    $('#edit-cover').data('imageUrl', url)
+                  }).catch(function(error) {
+                      console.log("ran into an error generating the image download url: ", error.message);
+                  });
+            });
         }
+    });
+
+    $("#edit-submit").click(() => {
+        let submitStoryButton = $(editButton).closest('.story');
+        let submitId = $(submitStoryButton).data('story-id');
+        let updatedStory = modelUpdateStory({
+            id: submitId,
+            title: $("#edit-title").val(),
+            description: $("#edit-description").val(),
+        });
+        console.log("ID in edit form submit: "+submitId);
+        // let newImageUrl = "url"
+
+        const userId = firebase.auth().currentUser.uid;
+        let url = $('#edit-cover').data('imageUrl');
+        console.log("url in edit-form thing is: ", url)
+        if (url != undefined) {
+            //associates the image url under the user's info in the database
+            console.log("accidently got  in here");
+            firebase.database().ref('users/' + userId + "/stories/" + id + "/image").set(url).catch(error => {
+                console.log(error.message)
+            });
+        } else {
+            firebase.database().ref('users/' + userId + "/stories/" + id).on('value', function(snapshot) {
+                url = snapshot.val().image;
+                // return stories;
+    
+            }, function (errorObject) {
+                console.log("The read failed: " + errorObject.code);
+            });
+        }
+        updatedStory.image = url;
+        // if (newImageUrl != "url") {
+        //     updatedStory.image = newImageUrl
+        // }
+        
+        let storyContainer = $(formatStoryButton(updatedStory)).insertBefore("#edit-form");
+        $("#edit-form").remove();
+
+        if (state.selectedStory && story.id == state.selectedStory.id)
+            $(storyContainer).addClass("selected-story");
     });
 
     $("#remove-cover").click(function() {
@@ -339,6 +462,7 @@ function editStory(editButton) {
         story.imageName = null;
     });
 }
+
 
 function updateWordcount() {
     let wordcount = getWordcount();
@@ -352,7 +476,7 @@ function updateWordcount() {
             if (progress >= state.currentSprint.goal)
                 endSprint();
         }
-    }   
+    }
 }
 
 function getWordcount() {

@@ -27,6 +27,13 @@ body {
 	max-height: 3.5rem;
 }
 
+.navbar-burger {
+	height: 56px;
+    width: 56px;
+    justify-self: center;
+	align-self: center;
+}
+
 .story {
 	position: relative;
 }
@@ -128,4 +135,8 @@ body {
 .fine-text a {
 	color: #BBB;
 	text-decoration: underline;
+}
+
+.buttons a {
+	margin-right: .5rem;
 }

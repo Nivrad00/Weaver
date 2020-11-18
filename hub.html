@@ -17,27 +17,35 @@
 
 <body>
     <nav class="navbar has-shadow" role="navigation">
-        <div class="container">
-            <div class="navbar-brand">
-                <a class="navbar-item" href="/" style="margin-left: 20px">
-                    <img id="Logo" src="images/weaver.png" width="140" height="60">
-                </a>
-            </div>
+        <div class="navbar-brand">
+            <a class="navbar-item" href="/" style="margin-left: 20px">
+                <img id="Logo" src="images/weaver.png" width="140" height="60">
+            </a>
+        </div>
+        <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+        <div class="navbar-menu">
             <div class="navbar-end">
                 <div class="navbar-item">
-                    <span id="user" class="has-text-weight-bold"></span>
+                    <span id="user-msg"></span>
+                </div>
+                <div class="navbar-item"> &nbsp;&nbsp;
+                    <a id="user" href="#"></a>
                 </div>
                 <div class="navbar-item">
-                    <a href="/home.html">
-                        <button id="MyStories" class="button is-primary">
-                            <span>My Stories</span>
+                    <div class="buttons">
+                        <a href="home.html">
+                            <button id="my-stories" class="button is-primary">
+                                <span>My Stories</span>
+                            </button>
+                        </a>
+                        <button id="Logout" class="button is-light">
+                            <span>Logout</span>
                         </button>
-                    </a>
-                </div>
-                <div class="navbar-item">
-                    <button id="Logout" class="button is-primary">
-                        <span>Logout</span>
-                    </button>
+                    </div>
                 </div>
             </div>
         </div>

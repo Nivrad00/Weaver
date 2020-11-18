@@ -1,95 +1,114 @@
-$(function()  {
+function saveHelper(e) {
+    e.preventDefault();
+
+    let id = $("#save-story").data('story-id');
+
+    const userId = firebase.auth().currentUser.uid;
+
+    // get Delta content object (holds text + text formatting)
+    let content = editor.getContents();
+
+    let description = content.ops[0].insert.slice(0, 40);
+
+    let title = $("#story-title").val();
+    if (title == "") {
+        title = "untitled";
+    }
+
+    if (id === undefined) {
+        // if story does not yet have id...
+
+        id = nextID;
+        updateStoryTab(id, title, description);
+
+        firebase.database().ref('users/' + userId + "/stories/" + id).push({
+            content: content,
+            title: title,
+            isShared: false,
+            description: description,
+            id: id
+        }).catch(error => {
+            console.log(error.message)
+        }).then(newRef => {
+            id = newRef.id;
+            firebase.database().ref('users/' + userId + "/stories/" + id + "/id").set(id);
+        })
+
+    } else {
+        updateStoryTab(id, title, description);
+        //save the story to the database under userId/stories/(id of the story)
+        firebase.database().ref('users/' + userId + "/stories/" + id).update({
+            description: description,
+            id: id,
+            content: content,
+            title: title,
+            isShared: false
+        }).catch(error => {
+            console.log(error.message)
+        })
+    }
+}
+
+function shareHelper(e) {
+    e.preventDefault();
+
+    let id = $("#save-story").data('story-id');
+
+    const userId = firebase.auth().currentUser.uid;
+
+    // get Delta content object (holds text + text formatting)
+    let content = editor.getContents();
+
+    let description = content.ops[0].insert.slice(0, 40);
+
+    let title = $("#story-title").val();
+    if (title == "") {
+        title = "untitled";
+    }
+
+    if (id === undefined) {
+        // if story does not yet have id...
+
+        id = nextID;
+        updateStoryTab(id, title, description);
+
+        firebase.database().ref('users/' + userId + "/stories/" + id).push({
+            content: content,
+            title: title,
+            isShared: true,
+            description: description,
+            id: id
+        }).catch(error => {
+            console.log(error.message)
+        }).then(newRef => {
+            id = newRef.id;
+            firebase.database().ref('users/' + userId + "/stories/" + id + "/id").set(id);
+        })
+
+    } else {
+        updateStoryTab(id, title, description);
+        //save the story to the database under userId/stories/(id of the story)
+        firebase.database().ref('users/' + userId + "/stories/" + id).update({
+            description: description,
+            id: id,
+            content: content,
+            title: title,
+            isShared: true
+        }).catch(error => {
+            console.log(error.message)
+        })
+    }
+
+}
+
+$(function() {
 
     const saveStory = $('#save-story');
 
-    saveStory.on('click', (e) => {
-        e.preventDefault();
-        const story = $('#editor').text();
-        const title = $('#storyTitle').val();
-
-        //get the id of the current user
-        const userId = firebase.auth().currentUser.uid;
-        console.log(title);
-
-        if (title == null || title == undefined || title == "") {
-            var numUntitled;
-            firebase.database().ref('users/' + userId + "/numUntitled").once('value').then(function(snapshot) {
-                numUntitled = snapshot.val()
-                title = "untitled" + numUntitled;
-                numUntitled++;
-                firebase.database().ref('users/' + userId + "/numUntitled").set(numUntitled).catch(error => {
-                    console.log(error.message)
-                });
-                 //this is what adds the story to the database
-                //it points to the users directory under Weaver-Users, and 
-                firebase.database().ref('users/' + userId + "/stories/" + title + "/body").set(story).catch(error => {
-                    console.log(error.message)
-                });
-                firebase.database().ref('users/' + userId + "/stories/" + title + "/isShared").set(true).catch(error => {
-                    console.log(error.message)
-                });
-
-                console.log("\"" + title + "\" saved successfully!")
-            })
-        } else {
-             //this is what adds the story to the database
-            //it points to the users directory under Weaver-Users, and 
-            firebase.database().ref('users/' + userId + "/stories/" + title + "/body").set(story).catch(error => {
-                console.log(error.message)
-            });
-            firebase.database().ref('users/' + userId + "/stories/" + title + "/isShared").set(true).catch(error => {
-                console.log(error.message)
-            });
-
-            console.log("\"" + title + "\" saved successfully!")
-        }
-    })
+    saveStory.on('click', saveHelper);
 
     const shareStory = $('#share-story');
 
-    shareStory.on('click', (e) => {
-        e.preventDefault();
-        const story = $('#editor').text();
-        let title = $('#storyTitle').val();
-
-        //get the id of the current user
-        const userId = firebase.auth().currentUser.uid
-
-        if (title == null || title == undefined || title == "") {
-            var numUntitled = 0;
-            firebase.database().ref('users/' + userId + "/numUntitled").once('value').then(function(snapshot) {
-                numUntitled = snapshot.val()
-                if (numUntitled == null) {
-                    numUntitled = 0;
-                }
-                title = "untitled" + numUntitled;
-                numUntitled++;
-                firebase.database().ref('users/' + userId + "/numUntitled").set(numUntitled).catch(error => {
-                    console.log(error.message)
-                });
-                 //this is what adds the story to the database
-                //it points to the users directory under Weaver-Users, and 
-                firebase.database().ref('users/' + userId + "/stories/" + title + "/body").set(story).catch(error => {
-                    console.log(error.message)
-                });
-                firebase.database().ref('users/' + userId + "/stories/" + title + "/isShared").set(true).catch(error => {
-                    console.log(error.message)
-                });
-
-                console.log("\"" + title + "\" saved successfully!")
-            })
-        } else {
-             //this is what adds the story to the database
-            //it points to the users directory under Weaver-Users, and 
-            firebase.database().ref('users/' + userId + "/stories/" + title + "/body").set(story).catch(error => {
-                console.log(error.message)
-            });
-            firebase.database().ref('users/' + userId + "/stories/" + title + "/isShared").set(true).catch(error => {
-                console.log(error.message)
-            });
-
-            console.log("\"" + title + "\" saved successfully!")
-        }
-    })
-
-})
+    shareStory.on('click', shareHelper);
+});
+ 
