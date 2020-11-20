@@ -331,10 +331,15 @@ function setTabSprints() {
 }
 
 function deleteStory(deleteButton) {
+
     $(deleteButton).mouseleave();
     let storyButton = $(deleteButton).closest('.story');
     let id = $(storyButton).data('story-id');
     let story = modelGetStory(id);
+
+    if (state.selectedStory && state.selectedStory.id == id) {
+        resetEditor();
+    }
 
     $("#delete-name").text(story.title || "Untitled");
     $("#delete-yes").click(() => {
@@ -346,10 +351,16 @@ function deleteStory(deleteButton) {
     $("#delete-confirm").css("visibility", "visible");
 }
 
+function resetEditor() {
+    editor.deleteText();
+    $("#story-title").val("");
+    $("#save-story").prop("disabled",true);
+    $("#share-story").prop("disabled",true);
+}
+
 const selectStory = async function(button) {
     let storyContainer = $(button).closest('.story');
     let id = $(storyContainer).data('story-id');
-    console.log(id);
 
     if (state.selectedStory && state.selectedStory.id == id)
         return;
