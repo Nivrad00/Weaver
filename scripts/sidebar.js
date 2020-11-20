@@ -19,8 +19,7 @@ function modelAddStory() {
     story.id = nextID;
 
     let imageUrl = ""
-    const userId = firebase.auth().currentUser.uid
-    var storageRef = firebase.storage().ref('bookIcon.png');
+    const userId = firebase.auth().currentUser.uid;
 
     let newStory =  {
         title: "Untitled " + nextID,
@@ -337,14 +336,13 @@ function deleteStory(deleteButton) {
     let id = $(storyButton).data('story-id');
     let story = modelGetStory(id);
 
-    if (state.selectedStory && state.selectedStory.id == id) {
-        resetEditor();
-    }
-
     $("#delete-name").text(story.title || "Untitled");
     $("#delete-yes").click(() => {
         $(storyButton).remove();
         modelDeleteStory(id);
+        if (state.selectedStory && state.selectedStory.id == id) {
+            resetEditor();
+        }
         $("#delete-confirm").css("visibility", "hidden");
         $("#delete-yes").unbind("click");
     });
@@ -352,13 +350,16 @@ function deleteStory(deleteButton) {
 }
 
 function resetEditor() {
-    editor.deleteText();
+    editor.setContents("");
     $("#story-title").val("");
     $("#save-story").prop("disabled",true);
     $("#share-story").prop("disabled",true);
+    $("#save-story").data('story-id', "");
+    $("#save-story").data('story-title', "")
 }
 
 const selectStory = async function(button) {
+    editor.off('editor-change', editorOnChange);
     let storyContainer = $(button).closest('.story');
     let id = $(storyContainer).data('story-id');
 
@@ -389,7 +390,50 @@ const selectStory = async function(button) {
     
         updateWordcount();
         resetSprint();
+        editor.on('editor-change', editorOnChange);
     })
+}
+
+function addAndSelectNewStory() {
+
+    const userId = firebase.auth().currentUser.uid;
+
+    content = editor.getContents();
+
+    let story =  {
+        title: "Untitled " + nextID,
+        description: "",
+        content: content,
+        id: nextID,
+        image: bookImageURL,
+        isShared: false
+    }
+    console.log(story.image);
+    let id = nextID;
+    
+    firebase.database().ref('users/' + userId + "/stories/" + story.id).set(story).catch(error => {
+        console.log(error.message)
+    });
+
+    nextID++;
+
+    firebase.database().ref('users/' + userId + "/nextID").set(nextID).catch(error => {
+        console.log(error.message)
+    });
+
+    $("#add-story").before(formatStoryButton(story));
+
+    let storyContainer = $(`.story[data-story-id='${id}']`);
+
+    $(storyContainer).addClass("selected-story");
+
+    $("#save-story").data('story-id', id);
+
+    state.selectedStory = story;
+
+    updateWordcount();
+    resetSprint();
+
 }
 
 function editStory(editButton) {
@@ -753,3 +797,19 @@ $(document).ready(() => {
     });
 
 });
+
+
+editor.on('editor-change', editorOnChange);
+
+function editorOnChange() {
+    if (editor.getLength() > 1) {
+        $("#save-story").prop("disabled",false);
+        $("#share-story").prop("disabled",false);
+        if ($("#save-story").data('story-id') == "" || $("#save-story").data('story-id') == undefined) {
+            addAndSelectNewStory();
+        }
+    } else {
+        $("#save-story").prop("disabled",true);
+        $("#share-story").prop("disabled",true);
+    }
+}

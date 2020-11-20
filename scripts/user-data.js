@@ -20,7 +20,7 @@ function saveHelper(e) {
         id = nextID;
     }
     
-    let description = $(`.story[data-story-d='${id}']`).find(".edit-description").val();
+    let description = $(`.story[data-story-id='${id}']`).find(".edit-description").val();
 
     if (description == "" || description == undefined) {
         description = content.ops[0].insert.slice(0, 40);
@@ -62,7 +62,7 @@ function shareHelper(e) {
         id = nextID;
     }
     
-    let description = $(`.story[data-story-d='${id}']`).find(".edit-description").val();
+    let description = $(`.story[data-story-id='${id}']`).find(".edit-description").val();
 
     if (description == "" || description == undefined) {
         description = content.ops[0].insert.slice(0, 40);

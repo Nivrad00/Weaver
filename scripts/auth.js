@@ -1,5 +1,8 @@
 var nextID = 1;
 
+let storageRef;
+let bookImageURL;
+
 $(function () {
 
     // Your web app's Firebase configuration
@@ -39,6 +42,10 @@ $(function () {
             $('#user').text(user.email);
             $('#user').data("status", "ready");
             const userId = firebase.auth().currentUser.uid;
+            storageRef = firebase.storage().ref('bookIcon.png');
+            storageRef.getDownloadURL().then(function(url) {
+                bookImageURL = url;
+            });
             // get nextID value
             firebase.database().ref('users/' + userId + "/nextID").once('value').then(function(snapshot) {
                 nextID = snapshot.val();

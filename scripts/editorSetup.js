@@ -35,14 +35,3 @@ var options = {
 };
         
 var editor = new Quill('#editor', options);
-
-editor.on('editor-change', function(eventName) {
-    if (editor.getLength() > 1) {
-        $("#save-story").prop("disabled",false);
-        $("#share-story").prop("disabled",false);
-    } else {
-        $("#save-story").prop("disabled",true);
-        $("#share-story").prop("disabled",true);
-    }
-
-});
