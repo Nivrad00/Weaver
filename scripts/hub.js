@@ -54,7 +54,7 @@ const createStoryCard = function(story) {
     console.log(title, description);
 
     $("#hubStories").append($("<div>").addClass("storyCard").append(
-        $("<h1>").addClass("title is-3").text(title)).append(
+        $("<h1>").addClass("title is-4").text(title)).append(
             $("<p>").addClass("subtitle is-5").text(description)
     ))
 }

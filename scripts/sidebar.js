@@ -374,6 +374,7 @@ const selectStory = async function(button) {
         }
         $("#save-story").data('story-id', id);
         $("#save-story").data('story-title', story.title)
+        $("#story-title").val(story.title);
     
         updateWordcount();
         resetSprint();

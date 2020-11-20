@@ -10,7 +10,10 @@ function saveHelper(e) {
 
     let title = $("#story-title").val();
     if (title == "") {
-        title = "untitled";
+        title = $("#save-story").data('story-title');
+        if (title == "") {
+            title = "untitled";
+        }
     }
 
     if (id === undefined) {
@@ -19,7 +22,7 @@ function saveHelper(e) {
     
     let description = $(`.story[data-story-d='${id}']`).find(".edit-description").val();
 
-    if (description == "") {
+    if (description == "" || description == undefined) {
         description = content.ops[0].insert.slice(0, 40);
     }
 
@@ -27,6 +30,14 @@ function saveHelper(e) {
 
     firebase.database().ref('users/' + userId + "/stories/" + id + "/content").set(content);
     firebase.database().ref('users/' + userId + "/stories/" + id + "/description").set(description);
+    firebase.database().ref('users/' + userId + "/stories/" + id + "/title").set(title);
+    firebase.database().ref('users/' + userId + "/stories/" + id + "/id").set(id);
+    
+    let hasBeenShared = false;
+    firebase.database().ref('users/' + userId + "/stories/" + id + "/isShared").once('value').then(function(isSharedSnapshot) {
+        hasBeenShared = hasBeenShared || isSharedSnapshot.val();
+        firebase.database().ref('users/' + userId + "/stories/" + id + "/isShared").set(hasBeenShared);
+    });
 }
 
 function shareHelper(e) {
@@ -39,45 +50,31 @@ function shareHelper(e) {
     // get Delta content object (holds text + text formatting)
     let content = editor.getContents();
 
-    let description = content.ops[0].insert.slice(0, 40);
-
     let title = $("#story-title").val();
     if (title == "") {
-        title = "untitled";
+        title = $("#save-story").data('story-title');
+        if (title == "") {
+            title = "untitled";
+        }
     }
 
     if (id === undefined) {
-        // if story does not yet have id...
-
         id = nextID;
-        updateStoryTab(id, title, description);
-
-        firebase.database().ref('users/' + userId + "/stories/" + id).push({
-            content: content,
-            title: title,
-            isShared: true,
-            description: description,
-            id: id
-        }).catch(error => {
-            console.log(error.message)
-        }).then(newRef => {
-            id = newRef.id;
-            firebase.database().ref('users/' + userId + "/stories/" + id + "/id").set(id);
-        })
-
-    } else {
-        updateStoryTab(id, title, description);
-        //save the story to the database under userId/stories/(id of the story)
-        firebase.database().ref('users/' + userId + "/stories/" + id).update({
-            description: description,
-            id: id,
-            content: content,
-            title: title,
-            isShared: true
-        }).catch(error => {
-            console.log(error.message)
-        })
     }
+    
+    let description = $(`.story[data-story-d='${id}']`).find(".edit-description").val();
+
+    if (description == "" || description == undefined) {
+        description = content.ops[0].insert.slice(0, 40);
+    }
+
+    updateStoryTab(id, title, description);
+
+    firebase.database().ref('users/' + userId + "/stories/" + id + "/content").set(content);
+    firebase.database().ref('users/' + userId + "/stories/" + id + "/description").set(description);
+    firebase.database().ref('users/' + userId + "/stories/" + id + "/title").set(title);
+    firebase.database().ref('users/' + userId + "/stories/" + id + "/id").set(id);
+    firebase.database().ref('users/' + userId + "/stories/" + id + "/isShared").set(true);
 
 }
 
