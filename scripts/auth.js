@@ -2,6 +2,7 @@ var nextID = 1;
 
 let storageRef;
 let bookImageURL;
+let userId;
 
 $(function () {
 
@@ -41,7 +42,7 @@ $(function () {
             //set user info in home page after log in
             $('#user').text(user.email);
             $('#user').data("status", "ready");
-            const userId = firebase.auth().currentUser.uid;
+            userId = firebase.auth().currentUser.uid;
             storageRef = firebase.storage().ref('bookIcon.png');
             storageRef.getDownloadURL().then(function(url) {
                 bookImageURL = url;
