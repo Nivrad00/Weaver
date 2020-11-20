@@ -1,6 +1,5 @@
 /* placeholder "database" :) */
 
-var nextID = 1;
 var stories = [];
 
 const sleep = m => new Promise(r => setTimeout(r, m))
@@ -53,17 +52,20 @@ function modelAddStory() {
     return story;
 }
 
-function modelGetStory(id) {
+async function modelGetStory(id) {
     let story = {};
-    const userId = firebase.auth().currentUser.uid
-    firebase.database().ref('users/' + userId + "/stories/" + id).on('value', function(snapshot) {
-        story = snapshot.val()
+    const userId = firebase.auth().currentUser.uid;
 
+    const data = await firebase.database().ref('users/' + userId + "/stories/" + id).once('value').then(function(snapshot) {
+        story = snapshot.val()
+        return story;
     }, function (errorObject) {
          console.log("The read failed: " + errorObject.code);
-    });
+    })
 
     return story;
+
+
 }
 
 function modelDeleteStory(id) {
@@ -344,9 +346,10 @@ function deleteStory(deleteButton) {
     $("#delete-confirm").css("visibility", "visible");
 }
 
-function selectStory(button) {
+const selectStory = async function(button) {
     let storyContainer = $(button).closest('.story');
     let id = $(storyContainer).data('story-id');
+    console.log(id);
 
     if (state.selectedStory && state.selectedStory.id == id)
         return;
@@ -361,18 +364,20 @@ function selectStory(button) {
     }
 
     $(storyContainer).addClass("selected-story");
-    let story = modelGetStory(id);
-    if (story != undefined) {
-        editor.setContents(story.content);
-        state.selectedStory = story;
-    } else {
-        editor.setText("");
-    }
-    $("#save-story").data('story-id', id);
-    $("#save-story").data('story-title', story.title)
 
-    updateWordcount();
-    resetSprint();
+    modelGetStory(id).then(story => {
+        if (story != undefined) {
+            editor.setContents(story.content);
+            state.selectedStory = story;
+        } else {
+            editor.setText("");
+        }
+        $("#save-story").data('story-id', id);
+        $("#save-story").data('story-title', story.title)
+    
+        updateWordcount();
+        resetSprint();
+    })
 }
 
 function editStory(editButton) {

@@ -1,3 +1,5 @@
+var nextID = 1;
+
 $(function () {
 
     // Your web app's Firebase configuration
@@ -36,6 +38,11 @@ $(function () {
             //set user info in home page after log in
             $('#user').text(user.email);
             $('#user').data("status", "ready");
+            const userId = firebase.auth().currentUser.uid;
+            // get nextID value
+            firebase.database().ref('users/' + userId + "/nextID").once('value').then(function(snapshot) {
+                nextID = snapshot.val();
+            })
         }
     })
 
