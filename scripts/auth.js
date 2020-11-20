@@ -50,6 +50,9 @@ $(function () {
             // get nextID value
             firebase.database().ref('users/' + userId + "/nextID").once('value').then(function(snapshot) {
                 nextID = snapshot.val();
+                if (nextID == undefined) {
+                    nextID = 1;
+                }
             })
         }
     })
@@ -76,7 +79,8 @@ $(function () {
                 firebase.database().ref('users/' + userId).set({
                     username: name,
                     email: email,
-                    stories: stories
+                    stories: stories,
+                    nextID: 1
                 });
             }
             writeUserData(userId, userName, email, {});
