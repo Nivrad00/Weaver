@@ -35,3 +35,4 @@ var options = {
 };
         
 var editor = new Quill('#editor', options);
+

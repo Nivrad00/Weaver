@@ -257,9 +257,8 @@ async function populateStoryTab() {
 }
 
 function updateStoryTab(id, title, description) {
-    console.log(id);
-    $(`.story[story-id="${id}"]`).find(".title").text(title);
-    $(`.story[story-id="${id}"]`).find(".subtitle").text(description);
+    $(`.story[data-story-id="${id}"]`).find(".title").text(title);
+    $(`.story[data-story-id="${id}"]`).find(".subtitle").text(description);
 }
 
 function setTab(tab) {
@@ -375,6 +374,13 @@ const selectStory = async function(button) {
         updateWordcount();
         resetSprint();
         editor.on('editor-change', editorOnChange);
+        if (editor.getLength() > 1) {
+            $("#save-story").prop("disabled",false);
+            $("#share-story").prop("disabled",false);
+        } else {
+            $("#save-story").prop("disabled",true);
+            $("#share-story").prop("disabled",true);
+        }
     })
 }
 
@@ -502,6 +508,7 @@ function editStory(editButton) {
     
             if (state.selectedStory && story.id == state.selectedStory.id)
                 $(storyContainer).addClass("selected-story");
+                $("#story-title").val(updatedStory.title);
         });
     });
 

@@ -82,10 +82,58 @@ $(function() {
 
     const saveStory = $('#save-story');
 
-    saveStory.on('click', saveHelper);
+    saveStory.on('click', onSaveButtonClick);
 
     const shareStory = $('#share-story');
 
-    shareStory.on('click', shareHelper);
+    shareStory.on('click', onShareButtonClick);
+
+    $(".modal-background, .modal-close").on("click", closeModals);
+    // esc key closes modals
+    $(window).on("keydown", function(event) {
+        var e = event || window.event;
+        if (e.keyCode === 27) {
+            closeModals();
+        }
+    })
 });
  
+
+const closeModals = function() {
+    $(document.documentElement).removeClass("is-clipped");
+    $(".modal").removeClass("is-active");
+}
+
+const onSaveButtonClick = function(e) {
+    $("#save-modal").addClass("is-active");
+    $(document.documentElement).addClass("is-clipped");
+
+    $("#save-yes").off().on("click", yesSave);
+    $("#save-no").off().on("click", closeModals);
+}
+
+const yesSave = function(e) {
+    id = $("#save-story").data('story-id');
+
+    saveHelper(e);
+
+    closeModals();
+}
+
+const onShareButtonClick = function(e) {
+    $("#share-modal").addClass("is-active");
+    $(document.documentElement).addClass("is-clipped");
+
+    $("#share-yes").off().on("click", yesShare);
+    $("#share-no").off().on("click", closeModals);
+}
+
+const yesShare = function(e) {
+    id = $("#share-story").data('story-id');
+
+    shareHelper(e);
+
+    closeModals();
+
+    window.location.pathname = '/hub.html';
+}
