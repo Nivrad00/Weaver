@@ -84,7 +84,7 @@ $(function () {
                 });
             }
             writeUserData(userId, userName, email, {});
-            alert(cred.user);
+            // alert(cred.user);
         }).catch(error => {
             console.log('Signup error: ' + error);
             $("#loginmsg").html(`<span style="color:red">${error.message}</span>`)
