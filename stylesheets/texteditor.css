@@ -1,6 +1,7 @@
 .editor {
     border: solid 1px #ccc;
-    padding: 20px;
+    padding-top: 20px;
+    padding-bottom: 20px;
     position: relative;
     display: block;
     margin-bottom: 10px;
