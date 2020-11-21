@@ -1,6 +1,28 @@
+let contentReader;
+
 const hubSetup = async function() {
 
-    getStories().then(stories => stories.forEach(story => createStoryCard(story)))
+    getStories().then(stories => stories.forEach(story => createStoryCard(story)));
+
+    $(".modal-background, .modal-close").on("click", closeModals);
+    // esc key closes modals
+    $(window).on("keydown", function(event) {
+        var e = event || window.event;
+        if (e.keyCode === 27) {
+            closeModals();
+        }
+    })
+
+    var contentReaderOptions = {
+        debug: 'info',
+        modules: {
+            toolbar: false,
+        },
+        readOnly: true,
+        theme: 'snow'
+    };
+
+    contentReader = new Quill('#story-contents', contentReaderOptions);
 
 }
 
@@ -48,19 +70,20 @@ const getStories = async function() {
 }
 
 const createStoryCard = function(story) {
-
-    /*$("#hubStories").append($("<div>").addClass("storyCard").append(
-        $("<h1>").addClass("title is-4").text(title)).append(
-            $("<p>").addClass("subtitle is-5").text(description)
-    ))*/
-
     if (!story.image) {
         $("#hubStories").append(`
             <div class="storyCard" data-story-id="${story.id}">
-                <div class="media">
+                <div class="level">
                     <div class="media-content">
-                        <p class="title is-4">${story.title || "Untitled"}</p>
-                        <p class="subtitle is-6">${story.description}</p>
+                        <p class="title is-5">${story.title || "Untitled"}</p>
+                        <p class="description">${story.description}</p>
+                    </div>
+                </div>
+                <div class="level level-author line-top">
+                    <div class="level-left">
+                        <div class="level-item">
+                            <a class="author"><i class="user-icon fas fa-user"></i>${story.author}</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -88,7 +111,45 @@ const createStoryCard = function(story) {
                 </div>
             </div>
         `)
-     }
+    }
+
+    $(`.storyCard[data-story-id="${story.id}"]`).on("click", {story: story}, handleStoryClick);
+}
+
+const handleStoryClick = function(info) {
+    story = info.data.story;
+
+    $("#story-read-modal").addClass("is-active");
+    $(document.documentElement).addClass("is-clipped");
+
+    $("#story-read-details").remove();
+
+    $("#story-contents").before(`
+        <div id="story-read-details">
+            <div class="level">
+                <div class="media-left">
+                    <figure class="image">
+                        <img src="${story.image}" class="cover" alt="${story.title || "Untitled"}">
+                    </figure>
+                </div>
+                <div class="media-content">
+                    <p class="title is-3">${story.title || "Untitled"}</p>
+                    <span class="author">By: <a class="author">${story.author}</a></span>
+                    <p class="description">${story.description}</p>
+                </div>
+            </div>
+            <div class="level line-top">
+                <div class="">
+            </div>
+        </div>
+    `)
+
+    contentReader.setContents(story.content);
+}
+
+const closeModals = function() {
+    $(document.documentElement).removeClass("is-clipped");
+    $(".modal").removeClass("is-active");
 }
 
 

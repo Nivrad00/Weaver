@@ -37,7 +37,7 @@ body {
     font-weight: 400;
 }
 
-.level-author {
+.storyCard .level-author {
     margin-top: auto;
 }
 
@@ -56,6 +56,49 @@ body {
 
 .storyCard i.user-icon {
     margin-right: 8px;
+}
+
+#story-container {
+    background: white;
+    border-radius: 50px;
+    height: 80vh;
+    padding: 50px;
+    overflow-y: scroll;
+}
+
+#story-container .title {
+    margin-bottom: 10px;
+}
+
+#story-container .description {
+    margin-top: 10px;
+    font-style: italic;
+    font-weight: 400;
+}
+
+#story-container .level-author {
+    margin-top: auto;
+}
+
+#story-container a {
+    color: gray;
+}
+
+#story-container .author {
+    color: gray;
+}
+
+#story-container a:hover {
+    color: #05d1b2;
+}
+
+#story-container i.user-icon {
+    margin-right: 8px;
+}
+
+.ql-container.ql-snow {
+    border: none;
+    height: max-content;
 }
 
 @media only screen and (max-width: 1400px) {

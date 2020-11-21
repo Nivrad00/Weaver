@@ -26,7 +26,6 @@ var toolbarOptions = [
   ];
 
 var options = {
-    debug: 'info',
     modules: {
         toolbar: toolbarOptions
     },

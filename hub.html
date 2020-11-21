@@ -8,6 +8,7 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
     <link rel="stylesheet" href="stylesheets/style.css" />
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="stylesheets/hub.css" />
 
     <script src="scripts/jquery-3.5.1.min.js"></script>
@@ -73,8 +74,8 @@
     <div class="modal" id="story-read-modal">
         <div class="modal-background"></div>
         <div class="modal-content">
-            <div class="story-container">
-                
+            <div id="story-container">
+                <div id="story-contents"></div>
             </div>
         </div>
         <button class="modal-close is-large" aria-label="close"></button>
@@ -87,6 +88,7 @@
     <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-firestore.js"></script>
 
     <script src="scripts/auth.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="scripts/hub.js"></script>
     
 
