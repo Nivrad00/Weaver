@@ -82,7 +82,7 @@ const createStoryCard = function(story) {
                 <div class="level level-author line-top">
                     <div class="level-left">
                         <div class="level-item">
-                            <a class="author">${story.author}</a>
+                            <a class="author"><i class="user-icon fas fa-user"></i>${story.author}</a>
                         </div>
                     </div>
                 </div>

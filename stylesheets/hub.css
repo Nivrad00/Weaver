@@ -1,5 +1,6 @@
 body {
     overflow-y: scroll;
+    background: #f7f7f7;
 }
 
 #hubStories {
@@ -51,6 +52,10 @@ body {
 
 .storyCard a:hover {
     color: #05d1b2;
+}
+
+.storyCard i.user-icon {
+    margin-right: 8px;
 }
 
 @media only screen and (max-width: 1400px) {
