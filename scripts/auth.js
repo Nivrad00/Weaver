@@ -329,3 +329,36 @@ $('#user').on('click', function () {
     })
 })
 
+// Google login
+$('#googlebtn').on('click', function () {
+    // alert('google')
+
+    let provider = new firebase.auth.GoogleAuthProvider();
+
+    // firebase.auth().signInWithRedirect(provider).then(function (result) {
+    firebase.auth().signInWithPopup(provider).then(function (result) {
+        // Google Access Token to access the Google API.
+        let token = result.credential.accessToken;
+        // The signed-in user info
+        let user = result.user
+        // redirect to home page
+        window.location.href = 'home.html'
+    }).catch(function (error) {
+        let errorCode = error.code
+        let errorMessage = error.message
+        console.log(errorMessage)
+
+        // email used to login
+        let email = error.email
+
+        // The firebase.auth.AuthCredential type that was used.
+        let credential = error.credential
+    });
+
+})
+
+// Twitter login
+$('#twitterbtn').on('click', function () {
+    // alert('twitter')
+    // needs twitter app registration, API key, API secret
+})
