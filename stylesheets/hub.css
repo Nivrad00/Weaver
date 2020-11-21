@@ -1,8 +1,11 @@
+body {
+    overflow-y: scroll;
+}
+
 #hubStories {
     display: grid;
     grid-template-columns: repeat(4, max-content);
     grid-gap: 20px;
-    overflow-y: scroll;
     justify-content: space-evenly;
 }
 
@@ -14,18 +17,40 @@
     min-width: 300px;
     border-radius: 10px;
     margin: 20px;
+    display: flex;
+    flex-direction: column;
 }
 
 .storyCard:hover {
     box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+    cursor: pointer;
 }
 
 .storyCard .title {
     margin-bottom: 10px;
 }
 
-.storyCard .subtitle {
-    margin-top: 0px !important;
+.storyCard .description {
+    margin-top: 10px;
+    font-style: italic;
+    font-weight: 400;
+}
+
+.level-author {
+    margin-top: auto;
+}
+
+.line-top {
+    border-top: 1.5px solid #e2e2e2;
+    padding-top: 10px;
+}
+
+.storyCard a {
+    color: gray;
+}
+
+.storyCard a:hover {
+    color: #05d1b2;
 }
 
 @media only screen and (max-width: 1400px) {
