@@ -458,6 +458,7 @@ function editStory(editButton) {
                 reader.readAsDataURL(this.files[0]);
                 let file = this.files[0];
                 var ref = firebase.storage().ref('users/'+userId+'/'+$('#cover-name').text());
+                
                 //updates the user's images in the firebaseStorage with the new image
                 let imageUrl = ref.put(file).then(function(snapshot) {
                     //creates the url used to display the image on the webpage
@@ -478,9 +479,20 @@ function editStory(editButton) {
                 title: $("#edit-title").val(),
                 description: $("#edit-description").val(),
             });
-            // let newImageUrl = "url"
     
-            let url = $('#edit-cover').data('imageUrl');
+            //updates the user's images in the firebaseStorage with the new image
+            let newImageUrl = $('#edit-cover').data('imageUrl');
+            if (newImageUrl == undefined) {
+                var ref = firebase.storage().ref('users/'+userId+'/'+$('#cover-name').text());
+                imageUrl = ref.getDownloadURL().then(function(url) {
+                    $('#edit-cover').data('imageUrl', url)
+                    newImageUrl = url;
+                }).catch(function(error) {
+                    console.log("ran into an error generating the image download url: ", error.message);
+                });
+            }
+
+            let url = newImageUrl;
 
             if (url == undefined) {
                 //associates the image url under the user's info in the database
