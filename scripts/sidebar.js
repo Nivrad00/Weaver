@@ -489,6 +489,9 @@ function editStory(editButton) {
                     console.log(error.message)
                 });
             } else {
+                firebase.database().ref('users/' + userId + "/stories/" + id + "/image").set(url).catch(error => {
+                    console.log(error.message)
+                });
                 firebase.database().ref('users/' + userId + "/stories/" + id).on('value', function(snapshot) {
                     url = snapshot.val().image;
         
