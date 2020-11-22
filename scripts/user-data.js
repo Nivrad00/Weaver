@@ -23,7 +23,10 @@ function saveHelper(e) {
     let description = $(`.story[data-story-id='${id}']`).find(".edit-description").val();
 
     if (description == "" || description == undefined) {
-        description = content.ops[0].insert.slice(0, 40);
+        description = $(`.story[data-story-id='${id}']`).find(".subtitle").text()
+        if (description == "" || description == undefined) {
+            description = content.ops[0].insert.slice(0, 40);
+        }
     }
 
     updateStoryTab(id, title, description);
