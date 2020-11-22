@@ -4,7 +4,6 @@ $(function() {
 })
 
 
-
 var toolbarOptions = [
     ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
     ['blockquote', 'code-block'],
@@ -25,13 +24,25 @@ var toolbarOptions = [
     ['clean']                                         // remove formatting button
   ];
 
+let matcher = function (node, delta) {
+    console.log(node.innerText);
+    var plaintext = node.innerText
+    var Delta = Quill.import('delta')
+    return new Delta().insert(plaintext)
+};
+
 var options = {
+    debug: 'info',
     modules: {
-        toolbar: toolbarOptions
+        toolbar: toolbarOptions,
+        clipboard: {
+            matchers: [
+                [Node.ELEMENT_NODE, matcher]
+            ]
+        }
     },
     placeholder: 'Compose a story...',
     theme: 'snow'
 };
         
 var editor = new Quill('#editor', options);
-

@@ -426,7 +426,7 @@ function addAndSelectNewStory() {
 
 }
 
-function editStory(editButton) {
+async function editStory(editButton) {
 
     let storyButton = $(editButton).closest('.story');
     let id = $(storyButton).data('story-id');
@@ -471,7 +471,7 @@ function editStory(editButton) {
             }
         });
     
-        $("#edit-submit").click(() => {
+        $("#edit-submit").on("click", async function() {
             let submitStoryButton = $(editButton).closest('.story');
             let submitId = $(submitStoryButton).data('story-id');
             let updatedStory = modelUpdateStory({
@@ -482,46 +482,39 @@ function editStory(editButton) {
     
             //updates the user's images in the firebaseStorage with the new image
             let newImageUrl = $('#edit-cover').data('imageUrl');
-            if (newImageUrl == undefined) {
-                var ref = firebase.storage().ref('users/'+userId+'/'+$('#cover-name').text());
-                imageUrl = ref.getDownloadURL().then(function(url) {
-                    $('#edit-cover').data('imageUrl', url)
-                    newImageUrl = url;
-                }).catch(function(error) {
-                    console.log("ran into an error generating the image download url: ", error.message);
-                });
-            }
 
             let url = newImageUrl;
 
             if (url == undefined) {
                 //associates the image url under the user's info in the database
-                url = bookImageURL;
-                firebase.database().ref('users/' + userId + "/stories/" + id + "/image").set(url).catch(error => {
-                    console.log(error.message)
-                });
+                url = await firebase.database().ref('users/' + userId + "/stories/" + id).once('value').then(function(storySnapshot) {
+                        url = storySnapshot.val().image;
+                    }, function (errorObject) {
+                        console.log("The read failed: " + errorObject.code);
+                    }).then(goOn => {
+                        updatedStory.image = url;
+                        let storyContainer = $(formatStoryButton(updatedStory)).insertBefore("#edit-form");
+                        $("#edit-form").remove();
+                
+                        if (state.selectedStory && story.id == state.selectedStory.id)
+                            $(storyContainer).addClass("selected-story");
+                            $("#story-title").val(updatedStory.title);
+                    });
+                
             } else {
                 firebase.database().ref('users/' + userId + "/stories/" + id + "/image").set(url).catch(error => {
                     console.log(error.message)
                 });
-                firebase.database().ref('users/' + userId + "/stories/" + id).on('value', function(snapshot) {
-                    url = snapshot.val().image;
+                updatedStory.image = url;
+                let storyContainer = $(formatStoryButton(updatedStory)).insertBefore("#edit-form");
+                $("#edit-form").remove();
         
-                }, function (errorObject) {
-                    console.log("The read failed: " + errorObject.code);
-                });
+                if (state.selectedStory && story.id == state.selectedStory.id)
+                    $(storyContainer).addClass("selected-story");
+                    $("#story-title").val(updatedStory.title);
             }
-            updatedStory.image = url;
-            // if (newImageUrl != "url") {
-            //     updatedStory.image = newImageUrl
-            // }
             
-            let storyContainer = $(formatStoryButton(updatedStory)).insertBefore("#edit-form");
-            $("#edit-form").remove();
     
-            if (state.selectedStory && story.id == state.selectedStory.id)
-                $(storyContainer).addClass("selected-story");
-                $("#story-title").val(updatedStory.title);
         });
     });
 
