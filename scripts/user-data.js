@@ -25,7 +25,7 @@ function saveHelper(e) {
     if (description == "" || description == undefined) {
         description = $(`.story[data-story-id='${id}']`).find(".subtitle").text()
         if (description == "" || description == undefined) {
-            description = content.ops[0].insert.slice(0, 40);
+            description = content.ops[0].insert.slice(0, 40) + "...";
         }
     }
 
@@ -70,7 +70,7 @@ function shareHelper(e) {
     if (description == "" || description == undefined) {
         description = $(`.story[data-story-id='${id}']`).find(".subtitle").text()
         if (description == "" || description == undefined) {
-            description = content.ops[0].insert.slice(0, 40);
+            description = content.ops[0].insert.slice(0, 40) + "...";
         }
     }
 
