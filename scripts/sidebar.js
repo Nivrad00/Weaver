@@ -457,7 +457,6 @@ function editStory(editButton) {
                 }
                 reader.readAsDataURL(this.files[0]);
                 let file = this.files[0];
-                const userId = firebase.auth().currentUser.uid
                 var ref = firebase.storage().ref('users/'+userId+'/'+$('#cover-name').text());
                 //updates the user's images in the firebaseStorage with the new image
                 let imageUrl = ref.put(file).then(function(snapshot) {
@@ -482,7 +481,6 @@ function editStory(editButton) {
             // let newImageUrl = "url"
     
             let url = $('#edit-cover').data('imageUrl');
-            console.log("url in edit-form thing is: ", url)
 
             if (url == undefined) {
                 //associates the image url under the user's info in the database
