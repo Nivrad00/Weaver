@@ -238,10 +238,7 @@ $('#user').on('click', function () {
                             <div class="field">
                                 <label for="" class="label">Email</label>
                                 <div class="control has-icons-left">
-                                    <input id="user-update-email" type="email" value="${user.email}" class="input" required>
-                                    <span class="icon is-small is-left">
-                                        <i class="fa fa-envelope"></i>
-                                    </span>
+                                    <p>${user.email}</p>
                                 </div>
                             </div>
 
@@ -284,18 +281,6 @@ $('#user').on('click', function () {
 
         // get current logged in user
         let user = firebase.auth().currentUser;
-
-        // update user email address
-        if (user.email !== userEmail) {
-            user.updateEmail(userEmail).then(function () {
-                console.log('user email updated')
-                // display email and update message 
-                $('#user').text(user.email);
-                $('#user-msg').text('User Updated')
-            }).catch(function (error) {
-                console.log(error)
-            });
-        }
 
         // update user password
         if (userPwd !== "") {
@@ -355,10 +340,4 @@ $('#googlebtn').on('click', function () {
         let credential = error.credential
     });
 
-})
-
-// Twitter login
-$('#twitterbtn').on('click', function () {
-    // alert('twitter')
-    // needs twitter app registration, API key, API secret
 })
