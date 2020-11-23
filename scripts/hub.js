@@ -35,7 +35,6 @@ const sharedStoryTemplate = {
     author: ""
 }
 
-
 const getStories = async function() {
     let stories = [];
     const data = await firebase.database().ref('/users').once('value').then(function(usersSnapshot) {
@@ -151,9 +150,6 @@ const closeModals = function() {
     $(document.documentElement).removeClass("is-clipped");
     $(".modal").removeClass("is-active");
 }
-
-
-
 
 $(function() {
     hubSetup();

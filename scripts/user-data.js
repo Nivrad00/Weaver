@@ -141,5 +141,5 @@ const yesShare = function(e) {
 
     closeModals();
 
-    window.location.pathname = '/hub.html';
+    window.location.pathname = 'Weaver/hub.html';
 }
