@@ -70,8 +70,7 @@ const getStories = async function() {
 
 const createStoryCard = function(story) {
     if (!story.image) {
-        $("#hubStories").append(`
-            <div class="storyCard" data-story-id="${story.id}">
+        $("#hubStories").append($("<div>").addClass("storyCard").data("story-id", story.id).append(`
                 <div class="level">
                     <div class="media-content">
                         <p class="title is-5">${story.title || "Untitled"}</p>
@@ -85,11 +84,9 @@ const createStoryCard = function(story) {
                         </div>
                     </div>
                 </div>
-            </div>
-        `)
+        `).on("click", {story: story}, handleStoryClick))
     } else {
-        $("#hubStories").append(`
-            <div class="storyCard" data-story-id="${story.id}">
+        $("#hubStories").append($("<div>").addClass("storyCard").data("story-id", story.id).append(`
                 <div class="level">
                     <div class="media-left">
                         <figure class="image">
@@ -108,11 +105,8 @@ const createStoryCard = function(story) {
                         </div>
                     </div>
                 </div>
-            </div>
-        `)
+        `).on("click", {story: story}, handleStoryClick))
     }
-
-    $(`.storyCard[data-story-id="${story.id}"]`).on("click", {story: story}, handleStoryClick);
 }
 
 const handleStoryClick = function(info) {
