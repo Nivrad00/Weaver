@@ -220,6 +220,11 @@ $('#user').on('click', function () {
 
     // get logged in user
     let user = firebase.auth().currentUser;
+    
+    //if google user, user update not allowed
+    if (user.emailVerified === true) {
+        return;
+    }
 
     // create modal
     let userModal =
