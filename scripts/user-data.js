@@ -8,7 +8,7 @@ function saveHelper(e) {
     // get Delta content object (holds text + text formatting)
     let content = editor.getContents();
 
-    let title = $("#story-title").val();
+    let title = $(`.story[data-story-id='${id}']`).find(".title").text();
     if (title == "") {
         title = $("#save-story").data('story-title');
         if (title == "") {
@@ -53,7 +53,7 @@ function shareHelper(e) {
     // get Delta content object (holds text + text formatting)
     let content = editor.getContents();
 
-    let title = $("#story-title").val();
+    let title = $(`.story[data-story-id='${id}']`).find(".title").text();
     if (title == "") {
         title = $("#save-story").data('story-title');
         if (title == "") {
@@ -141,5 +141,5 @@ const yesShare = function(e) {
 
     closeModals();
 
-    window.location.pathname = 'Weaver/hub.html';
+    window.location.pathname = '/Weaver/hub.html';
 }
